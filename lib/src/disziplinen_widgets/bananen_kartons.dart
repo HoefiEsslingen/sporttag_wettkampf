@@ -73,6 +73,7 @@ class BananenkartonsState extends State<Bananenkartons> {
         final zeit = entry.value;
 
         kinderMitZeiten[kind] = zeit; // Zeit speichern
+log.i('in auswerten $zeit für ${kind.nachname}');
         final punkte = _werteZeitenAus(zeit); // Punkte berechnen
         kind.erreichtePunkte += punkte; // Punkte zuweisen
       }

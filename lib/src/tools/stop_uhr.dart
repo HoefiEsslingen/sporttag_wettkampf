@@ -48,6 +48,8 @@ class _MyStopUhrState extends State<MyStopUhr> {
   get teilNehmer => widget.teilNehmer; // Liste der teilnehmenden Personen
 
   bool alleGestoppt = false; // Überwacht, ob alle Teilnehmer gestoppt wurden
+  bool isBlinking = false; // Für Blinke-Effekt
+  double opacity = 1.0; // Steuerung der Sichtbarkeit beim Blinken
 
   // Map zur Speicherung der gestoppten Zeiten für jeden Teilnehmer
   final Map<Kind, int> _kindMitZeit = {};
@@ -77,6 +79,17 @@ class _MyStopUhrState extends State<MyStopUhr> {
         }
       });
     });
+
+    // Blinke-Timer starten (nur wenn als Timer verwendet)
+    if (widget.alsTimer) {
+      Timer.periodic(const Duration(milliseconds: 500), (timer) {
+        if (remainingTime.inSeconds <= 2) {
+          setState(() {
+            opacity = opacity == 1.0 ? 0.5 : 1.0; // Blinken
+          });
+        }
+      });
+    }
   }
 
   // Methode zur Freigabe von Ressourcen beim Schließen des Widgets
@@ -90,10 +103,10 @@ class _MyStopUhrState extends State<MyStopUhr> {
   void _updateTimer() {
     if (remainingTime > Duration.zero && stopwatch.isRunning) {
       remainingTime -= aenderungsIntervall; // Reduzieren der verbleibenden Zeit
-      if (remainingTime <= Duration.zero) {
+      if (remainingTime <= Duration.zero - aenderungsIntervall) {
         stopwatch.stop(); // Timer stoppen, wenn die Zeit abgelaufen ist
-        remainingTime = Duration
-            .zero; // Sicherstellen, dass keine negative Zeit angezeigt wird
+        remainingTime = Duration.zero -
+            aenderungsIntervall; // Sicherstellen, dass keine negative Zeit angezeigt wird
       }
     }
   }
@@ -125,15 +138,21 @@ class _MyStopUhrState extends State<MyStopUhr> {
     });
   }
 
+  Color getUhrFarbe() {
+    if (!widget.alsTimer) return Colors.white; 
+    if (remainingTime.inSeconds > 2) return Colors.green; 
+    if (remainingTime.inSeconds > 0) return Colors.orange;
+    return Colors.red;
+  }
+
   String returnFormattedText() {
     Duration duration = alsTimer ? remainingTime : stopwatch.elapsed;
     var milli = duration.inMilliseconds;
-    String milliseconds =
-        (milli % 10).toString().padLeft(1, "0"); // this one for the miliseconds
-    String seconds = ((milli ~/ 1000) % 60)
-        .toString()
-        .padLeft(2, "0"); // this is for the second
-    return "$seconds:$milliseconds";
+
+    String tenths = ((milli ~/ 100) % 10).toString(); // Zehntelsekunde
+    String seconds = ((milli ~/ 1000) % 60).toString().padLeft(2, "0");
+
+    return "$seconds.$tenths"; // Korrekte Ausgabe: Sekunden.Zehntelsekunden
   }
 
   void _stopForKind(Kind kind) {
@@ -143,7 +162,8 @@ class _MyStopUhrState extends State<MyStopUhr> {
       _kindMitZeit[kind] = alsTimer
           ? remainingTime.inMilliseconds
           : stopwatch.elapsed.inMilliseconds;
-log.i('Es wurde nicht gestoppt: remainingTime: ${(remainingTime.inMilliseconds/ 1000).toStringAsFixed(1)}');
+      log.i(
+          'Es wurde nicht gestoppt: remainingTime: ${(remainingTime.inMilliseconds).toStringAsFixed(1)}');
       if (_kindMitZeit.length == teilNehmer.length) {
         t.cancel();
         alleGestoppt = true; // Markiere, dass alle Teilnehmer gestoppt wurden
@@ -169,23 +189,27 @@ log.i('Es wurde nicht gestoppt: remainingTime: ${(remainingTime.inMilliseconds/ 
                   handleStartStop();
                 },
                 padding: const EdgeInsets.all(0),
-                child: Container(
-                  height: 250,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    shape: BoxShape
-                        .circle, // this one is use for make the circle on ui.
-                    border: Border.all(
-                      color: const Color(0xff0395eb),
-                      width: 4,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 500),
+                  opacity: remainingTime.inSeconds <= 2 ? opacity : 1.0,
+                  child: Container(
+                    height: 250,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle, // this one is use for make the circle on ui.
+                      color: getUhrFarbe(),
+                      border: Border.all(
+                        color: const Color(0xff0395eb),
+                        width: 4,
+                      ),
                     ),
-                  ),
-                  child: Text(
-                    returnFormattedText(),
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 40,
-                      fontWeight: FontWeight.bold,
+                    child: Text(
+                      returnFormattedText(),
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 40,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),

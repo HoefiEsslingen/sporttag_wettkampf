@@ -16,7 +16,6 @@ class Sprint extends StatefulWidget {
 // const HuetchenSprint({super.key, required this.disziplin});
 //  final String disziplin;
 
-
   /// Aktivität vorbereiten
   @override
   SprintState createState() => SprintState();
@@ -35,6 +34,8 @@ class SprintState extends State<Sprint> {
   List<Kind> kinderZurAnzeige = []; // Speichert anzuzeigende Teilnehmer
   Set<Kind> ausgewerteteKinder = {}; // Speichert ausgewertete Teilnehmer
   Map<Kind, int> kinderMitZeiten = {}; // Speichert gestoppte Zeiten
+  Map<Kind, int> gewaehlteHuetchen =
+      {}; // Speichert die gewählte Hütchen-Nummer
 
   final log = getLogger();
 
@@ -66,7 +67,8 @@ class SprintState extends State<Sprint> {
         final zeit = entry.value;
 
         kinderMitZeiten[kind] = zeit; // Zeit speichern
-        final punkte = _werteZeitenAus(zeit); // Punkte berechnen
+        final punkte = _werteZeitenAus(zeit, kind); // Punkte berechnen
+        log.i('in auswerten $zeit für ${kind.nachname}');
         kind.erreichtePunkte += punkte; // Punkte zuweisen
       }
 
@@ -88,33 +90,28 @@ class SprintState extends State<Sprint> {
     }
   }
 
-  int _werteZeitenAus(int zeitInMillis) {
-    // Beispielhafte Bewertung basierend auf Zeit
-    final seconds = zeitInMillis ~/ 1000;
-    if (seconds > 17) {
-      return 0;
-    } else if (seconds > 16) {
-      return 1;
-    } else if (seconds > 15) {
-      return 2;
-    } else if (seconds > 14) {
-      return 3;
-    } else if (seconds > 13) {
-      return 4;
+  int _werteZeitenAus(int zeitInMillis, Kind kind) {
+    if (zeitInMillis > 0) {
+      return gewaehlteHuetchen[kind] ??
+          0; // Wenn 'kind' nicht in der Map enthalten ist, dann 0 zurückgeben
     } else {
-      return 5;
+      return 0;
     }
   }
 
+  bool alleHuetchenGewaehlt() {
+    return selectedKinder.every((kind) => gewaehlteHuetchen[kind] != null);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: MeineAppBar(
-        titel: stationsName, stationsName: stationsName,),
+        titel: stationsName,
+        stationsName: stationsName,
+      ),
       body: Center(
-        child: 
-        Column(
+        child: Column(
           children: [
             Text(
               'Bitte selektieren Sie die an der nächsten Runde teilnehmenden Kinder.',
@@ -155,24 +152,59 @@ class SprintState extends State<Sprint> {
                   final kind = kinderZurAnzeige[index];
                   final zeit = kinderMitZeiten[kind]; // Gestoppte Zeit abrufen
                   final istAusgewertet = ausgewerteteKinder.contains(kind);
-                  log.i('in ListViewBuilder ${kind.nachname} ist selektiert? -> ${selectedKinder.contains(kind).toString()}');
+                  log.i(
+                      'in ListViewBuilder ${kind.nachname} ist selektiert? -> ${selectedKinder.contains(kind).toString()}');
                   final istSelektiert = selectedKinder.contains(kind);
-                  return MeinListenEintrag(
-                    kind: kind,
-                    istAusgewertet: istAusgewertet,
-                    istSelektiert: istSelektiert,
-                    zeit: zeit,
-                    onSelectionChanged: (Kind kind, bool istSelektiert) {
-                      setState(() {
-                        if (istSelektiert) {
-                          selectedKinder
-                              .add(kind); // Hinzufügen, wenn ausgewählt
-                        } else {
-                          selectedKinder
-                              .remove(kind); // Entfernen, wenn abgewählt
-                        }
-                      });
-                    },
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment
+                        .spaceBetween, // Platzierung der Widgets
+                    children: [
+                      Expanded(
+                        flex: 3, // 3 Teile für den Listeneintrag
+                        child: MeinListenEintrag(
+                          kind: kind,
+                          istAusgewertet: istAusgewertet,
+                          istSelektiert: istSelektiert,
+                          zeit: zeit,
+                          onSelectionChanged: (Kind kind, bool istSelektiert) {
+                            setState(() {
+                              if (istSelektiert) {
+                                selectedKinder.add(kind);
+                                gewaehlteHuetchen.putIfAbsent(kind, () => 1);
+                              } else {
+                                selectedKinder.remove(kind);
+                                gewaehlteHuetchen.remove(kind);
+                              }
+                            });
+                          },
+                        ),
+                      ),
+                      if (istSelektiert &&
+                          !istAusgewertet) // Dropdown nur anzeigen, wenn Kind selektiert und nicht ausgewertet
+                        Expanded(
+                          flex: 1, // 1 Teil für das Dropdown-Menü
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 10.0),
+                            child: DropdownButton<int>(
+                              value: gewaehlteHuetchen[kind],
+                              items: [1, 2, 3, 4].map((int value) {
+                                return DropdownMenuItem<int>(
+                                  value: value,
+                                  child: Text('Hütchen $value'),
+                                );
+                              }).toList(),
+                              onChanged: (int? newValue) {
+                                if (newValue != null) {
+                                  setState(() {
+                                    gewaehlteHuetchen[kind] = newValue;
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                    ],
                   );
                 },
               ),
