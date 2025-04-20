@@ -144,6 +144,7 @@ log.i('in auswerten $zeit für ${kind.nachname}');
                             teilNehmer: selectedKinder,
                             alsTimer: false,
                             timerZeit: 15,
+                            testLauf: false,
                             auswertenDerZeiten:
                                 auswerten, // Ergebnisse verarbeiten)
                           ),

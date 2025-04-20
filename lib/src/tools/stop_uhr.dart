@@ -20,13 +20,15 @@ class MyStopUhr extends StatefulWidget {
     required this.teilNehmer,
     required this.alsTimer,
     required this.timerZeit,
+    required this.testLauf,
     required this.auswertenDerZeiten, // Callback-Funktion zur Rückgabe der Zeiten
   });
 
   final List<Kind> teilNehmer;
   final bool alsTimer;
   final int timerZeit;
-  final Function(Map<Kind, int>)
+  final bool testLauf;
+  final Function(Map<Kind, int>)?
       auswertenDerZeiten; // Callback für das rufende Widget
 
   @override
@@ -46,6 +48,8 @@ class _MyStopUhrState extends State<MyStopUhr> {
   get alsTimer => widget
       .alsTimer; // Steuerung: true => Timer-Modus, false => Stoppuhr-Modus
   get teilNehmer => widget.teilNehmer; // Liste der teilnehmenden Personen
+  get testLauf => widget
+      .testLauf; // Steuerung: true => Testlauf, false => regulärer Lauf
 
   bool alleGestoppt = false; // Überwacht, ob alle Teilnehmer gestoppt wurden
   bool isBlinking = false; // Für Blinke-Effekt
@@ -255,11 +259,15 @@ class _MyStopUhrState extends State<MyStopUhr> {
               ),
               if (alleGestoppt) // Beenden-Button anzeigen
                 ZurueckButton(
-                  label: 'Nächster Durchgang',
-                  auswertenDerErgebnisse: () {
+                  label: 
+                  !testLauf ?'Nächster Durchgang' : 'Testlauf beendet. \n Neue Auswahl der Hütchen ist möglich',
+                  auswertenDerErgebnisse: 
+                  !testLauf?
+                  () {
                     log.i('rufe Callback auf');
-                    widget.auswertenDerZeiten(_kindMitZeit);
-                  },
+                    widget.auswertenDerZeiten!(_kindMitZeit);
+                  }
+                  : null, // Callback nur aufrufen, wenn nicht im Testlauf
                 ), // Callback ausführen
             ],
           ),

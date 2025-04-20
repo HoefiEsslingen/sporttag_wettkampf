@@ -27,6 +27,7 @@ class SprintState extends State<Sprint> {
   // Repository-Objekte
   final KindRepository kindRepository = KindRepository();
   final StationenRepository stationenRepository = StationenRepository();
+  bool testLauf = true; // Kinder dürfen zuerst ihre Entscheidung testen
 
   late int riegenNummer;
   List<Kind> riegenKinder = [];
@@ -114,7 +115,7 @@ class SprintState extends State<Sprint> {
         child: Column(
           children: [
             Text(
-              'Bitte selektieren Sie die an der nächsten Runde teilnehmenden Kinder.',
+              'Die Kinder führen nach Wahl der Hütchen einen Probedurchgang durch. \nDanach kann die Hütchenwahl geändert werden.\nBitte selektieren Sie die an der nächsten Runde teilnehmenden Kinder,\nwählen Sie die gewünschten Hütchen aus.',
               textAlign: TextAlign.center,
               style:
                   Theme.of(context).textTheme.bodySmall, // Verwenden des Themes
@@ -126,6 +127,7 @@ class SprintState extends State<Sprint> {
               onPressed: (selectedKinder.isNotEmpty)
                   // Wenn selektierte Kinder vorhanden sind, dann den Timer starten
                   ? () {
+                      final laufStatus = testLauf;
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -133,15 +135,23 @@ class SprintState extends State<Sprint> {
                             teilNehmer: selectedKinder,
                             alsTimer: true,
                             timerZeit: 10,
-                            auswertenDerZeiten:
-                                auswerten, // Ergebnisse verarbeiten)
+                            testLauf: laufStatus,
+                            auswertenDerZeiten: !laufStatus
+                                ? auswerten
+                                : null, // Ergebnisse verarbeiten)
                           ),
                         ),
-                      );
+                      ).then((_) {
+                        setState(() {
+                          testLauf = !testLauf; // Jetzt toggeln
+                        });
+                      });
                     }
                   : null,
-              child: const Text(
-                'Starte Timer mit ausgewählten Namen',
+              child: Text(
+                testLauf
+                    ? 'Testlauf mit ausgewählten Namen'
+                    : 'Wertungslauf mit ausgewählten Namen',
                 textAlign: TextAlign.center,
               ),
             ),
