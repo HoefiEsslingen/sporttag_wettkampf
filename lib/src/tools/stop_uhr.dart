@@ -8,6 +8,7 @@ import 'package:sporttag/src/hilfs_widgets/rueck_sprung_button.dart';
 import '../hilfs_widgets/meine_appbar.dart';
 
 import 'logger.util.dart';
+import 'teilnehmer_liste.dart';
 
 class MyStopUhr extends StatefulWidget {
   /// *************************************
@@ -228,33 +229,12 @@ class _MyStopUhrState extends State<MyStopUhr> {
                         'Klicken Sie eine Teilnehmer:in um dessen Zeit zu stoppen.'),
               ),
               Expanded(
-                child: ListView.builder(
-                  itemCount: teilNehmer.length,
-                  itemBuilder: (context, index) {
-                    final kind = teilNehmer[index];
-                    return ListTile(
-                      title: Text('${kind.vorname} ${kind.nachname}'),
-                      // subtitle erscheint, wenn eine Zeit gestoppt wurde
-                      subtitle: _kindMitZeit.containsKey(kind)
-                          // Anzeigen sind unterscheidlich, je nachdem ob Timer oder Stoppuhr
-                          ? (alsTimer
-                              ? Text(
-                                  'Noch verbleibende Zeit: ${(_kindMitZeit[kind]! / 1000).toStringAsFixed(1)} Sekunden')
-                              : Text(
-                                  'Gestoppte Zeit: ${(_kindMitZeit[kind]! / 1000).toStringAsFixed(1)} Sekunden'))
-                          : null,
-                      // nachdem eine Zeit gestoppt wurde, wird ein grüner Haken angezeigt
-                      trailing: _kindMitZeit.containsKey(kind)
-                          ? const Icon(Icons.check, color: Colors.green)
-                          // sonst wird ein Button angezeigt, um die Zeit zu stoppen
-                          : stopwatch.isRunning
-                              ? ElevatedButton(
-                                  onPressed: () => _stopForKind(kind),
-                                  child: Text('${kind.vorname}'),
-                                )
-                              : null,
-                    );
-                  },
+                child: TeilnehmerListe(
+                  teilNehmer: teilNehmer,
+                  alsTimer: alsTimer,
+                  isRunning: stopwatch.isRunning,
+                  kindMitZeit: _kindMitZeit,
+                  onStop: _stopForKind,
                 ),
               ),
               if (alleGestoppt) // Beenden-Button anzeigen
