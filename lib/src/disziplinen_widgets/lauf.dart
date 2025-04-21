@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:sporttag/src/hilfs_widgets/meine_appbar.dart';
 import 'package:sporttag/src/hilfs_widgets/rueck_sprung_button.dart';
 
+import '../hilfs_widgets/mein_listen_eintrag.dart';
+import '../klassen/kind_klasse.dart';
+import '../tools/kind_repository.dart';
+import '../tools/logger.util.dart';
+import '../tools/stationen_repository.dart';
+import '../tools/stop_uhr.dart';
 
 class Lauf extends StatefulWidget {
   final int riegenNummer;
@@ -14,29 +20,149 @@ class Lauf extends StatefulWidget {
 }
 
 class LaufState extends State<Lauf> {
-  int get riegenNummer => widget.riegenNummer;
-  String get stationsName => widget.toString();
+  late int riegenNummer;
+  late String stationsName;
+
+  // Repository-Objekte
+  final KindRepository kindRepository = KindRepository();
+  final StationenRepository stationenRepository = StationenRepository();
+
+  List<Kind> riegenKinder = [];
+  List<Kind> kinderZurAnzeige = []; // Speichert anzuzeigende Teilnehmer
+  Set<Kind> ausgewerteteKinder = {}; // Speichert ausgewertete Teilnehmer
+  List<Kind> selectedKinder = [];
+  Map<Kind, int> kinderMitZeiten = {}; // Speichert gestoppte Zeiten
+
+  final log = getLogger();
 
   @override
   void initState() {
     super.initState();
+    stationsName = '30sec-${widget.toString()}';
+    riegenNummer = widget.riegenNummer;
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    riegenKinder = await kindRepository.ladeKinderDerRiege(riegenNummer);
+    // Liste zur Anzeige aufbereiten -> nicht ausgewertete Kinder oben
+    kinderZurAnzeige =
+        kindRepository.zurAnzeigeSortieren(riegenKinder, ausgewerteteKinder);
+    setState(() {}); // UI aktualisieren
+  }
+
+  Future<void> auswerten(Map<Kind, int> resultate) async {
+    log.i(
+        'in auswerten -> Ergebniss erstes Kind: ${resultate.values.first.toString()}');
+    setState(() {
+      kinderMitZeiten.addAll(resultate); // Gestoppte Zeiten hinzufügen
+      // Gestoppte Zeiten hinzufügen und Punkte berechnen
+      for (var entry in resultate.entries) {
+        final kind = entry.key;
+        final zeit = entry.value;
+
+        kinderMitZeiten[kind] = zeit; // Zeit speichern
+        log.i('in auswerten $zeit für ${kind.nachname}');
+      }
+
+      // Teilnehmer als ausgewertet markieren
+      ausgewerteteKinder.addAll(resultate.keys);
+
+      // Auswahl nach der Auswertung zurücksetzen
+      selectedKinder.clear();
+
+      // Liste zur Anzeige aufbereiten -> nicht ausgewertete Kinder oben
+      kinderZurAnzeige =
+          kindRepository.zurAnzeigeSortieren(riegenKinder, ausgewerteteKinder);
+    });
+
+    // Speichern der ausgewerteten Kinder in der Datenbank
+    final zuSpeicherndeKinder = resultate.keys.toList();
+    for (var kind in zuSpeicherndeKinder) {
+      await kindRepository.saveKindToDatabase(kind);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: MeineAppBar(
-        titel: '30 sec $stationsName',
-        stationsName: '30sec-$stationsName',
+        titel: stationsName,
+        stationsName: stationsName,
       ),
       body: Center(
         child: Column(
           children: [
             Text(
-              'Details zu 30 sec $stationsName',
-              style: const TextStyle(fontSize: 24),
+              'In 30 sek laufen mehrere Kinder (empfohlen 3 oder 4)\nso viele Runden wie möglich. \nGezählt wird zu Beginn jeder halben Runde',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall,
             ),
-            ZurueckButton(label: 'Zurueck zur Disziplinwahl'),
+            // Abstandshalter
+            SizedBox(height: 10),
+            // Liste der Kinder in der ausgewählten Riege
+            ElevatedButton(
+              onPressed: (selectedKinder.isNotEmpty)
+                  // Wenn selektierte Kinder vorhanden sind, dann den Timer starten
+                  ? () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MyStopUhr(
+                            teilNehmer: selectedKinder,
+                            rufendeStation: stationsName,
+                            auswertenDerZeiten:
+                                auswerten, // Ergebnisse verarbeiten)
+                          ),
+                        ),
+                      );
+                    }
+                  : null,
+              child: Text(
+                'Wertungslauf mit ausgewählten Namen',
+                textAlign: TextAlign.center,
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: riegenKinder.length,
+                itemBuilder: (context, index) {
+                  final kind = kinderZurAnzeige[index];
+                  final zeit = kinderMitZeiten[kind]; // Gestoppte Zeit abrufen
+                  final istAusgewertet = ausgewerteteKinder.contains(kind);
+                  log.i(
+                      'in ListViewBuilder ${kind.nachname} ist selektiert? -> ${selectedKinder.contains(kind).toString()}');
+                  final istSelektiert = selectedKinder.contains(kind);
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment
+                        .spaceBetween, // Platzierung der Widgets
+                    children: [
+                      Expanded(
+                        flex: 3, // 3 Teile für den Listeneintrag
+                        child: MeinListenEintrag(
+                          kind: kind,
+                          istAusgewertet: istAusgewertet,
+                          istSelektiert: istSelektiert,
+                          zeit: zeit,
+                          onSelectionChanged: (Kind kind, bool istSelektiert) {
+                            setState(() {
+                              if (istSelektiert) {
+                                selectedKinder.add(kind);
+                              } else {
+                                selectedKinder.remove(kind);
+                              }
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            if (riegenKinder.length ==
+                ausgewerteteKinder.length) // Beenden-Button anzeigen
+              ZurueckButton(label: 'Nächste Disziplin steht an'),
           ],
         ),
       ),

@@ -74,6 +74,7 @@ class BananenkartonsState extends State<Bananenkartons> {
 
         kinderMitZeiten[kind] = zeit; // Zeit speichern
 log.i('in auswerten $zeit für ${kind.nachname}');
+        // Punkte werden aufrund der erreichten Zeit berechnet
         final punkte = _werteZeitenAus(zeit); // Punkte berechnen
         kind.erreichtePunkte += punkte; // Punkte zuweisen
       }
@@ -142,9 +143,7 @@ log.i('in auswerten $zeit für ${kind.nachname}');
                         MaterialPageRoute(
                           builder: (context) => MyStopUhr(
                             teilNehmer: selectedKinder,
-                            alsTimer: false,
-                            timerZeit: 15,
-                            testLauf: false,
+                            rufendeStation: stationsName,
                             auswertenDerZeiten:
                                 auswerten, // Ergebnisse verarbeiten)
                           ),

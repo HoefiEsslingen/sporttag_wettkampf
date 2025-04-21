@@ -13,9 +13,6 @@ class Sprint extends StatefulWidget {
 
   const Sprint({super.key, required this.riegenNummer});
 
-// const HuetchenSprint({super.key, required this.disziplin});
-//  final String disziplin;
-
   /// Aktivität vorbereiten
   @override
   SprintState createState() => SprintState();
@@ -60,34 +57,38 @@ class SprintState extends State<Sprint> {
   Future<void> auswerten(Map<Kind, int> resultate) async {
     log.i(
         'in auswerten -> Ergebniss erstes Kind: ${resultate.values.first.toString()}');
-    setState(() {
-      kinderMitZeiten.addAll(resultate); // Gestoppte Zeiten hinzufügen
-      // Gestoppte Zeiten hinzufügen und Punkte berechnen
-      for (var entry in resultate.entries) {
-        final kind = entry.key;
-        final zeit = entry.value;
+    // Auswertung zulassen, falls der Testlauf beendet ist
+    if (!testLauf) {
+      setState(() {
+        kinderMitZeiten.addAll(resultate); // Gestoppte Zeiten hinzufügen
+        // Gestoppte Zeiten hinzufügen und Punkte berechnen
+        for (var entry in resultate.entries) {
+          final kind = entry.key;
+          final zeit = entry.value;
 
-        kinderMitZeiten[kind] = zeit; // Zeit speichern
-        final punkte = _werteZeitenAus(zeit, kind); // Punkte berechnen
-        log.i('in auswerten $zeit für ${kind.nachname}');
-        kind.erreichtePunkte += punkte; // Punkte zuweisen
+          kinderMitZeiten[kind] = zeit; // Zeit speichern
+          // die eingestellten Hütchen werden als Punkt vergeben, wenn die Zeit > 0 ist
+          final punkte = _werteZeitenAus(zeit, kind);
+          log.i('in auswerten $zeit für ${kind.nachname}');
+          kind.erreichtePunkte += punkte; // Punkte zuweisen
+        }
+
+        // Teilnehmer als ausgewertet markieren
+        ausgewerteteKinder.addAll(resultate.keys);
+
+        // Auswahl nach der Auswertung zurücksetzen
+        selectedKinder.clear();
+
+        // Liste zur Anzeige aufbereiten -> nicht ausgewertete Kinder oben
+        kinderZurAnzeige = kindRepository.zurAnzeigeSortieren(
+            riegenKinder, ausgewerteteKinder);
+      });
+
+      // Speichern der ausgewerteten Kinder in der Datenbank
+      final zuSpeicherndeKinder = resultate.keys.toList();
+      for (var kind in zuSpeicherndeKinder) {
+        await kindRepository.saveKindToDatabase(kind);
       }
-
-      // Teilnehmer als ausgewertet markieren
-      ausgewerteteKinder.addAll(resultate.keys);
-
-      // Auswahl nach der Auswertung zurücksetzen
-      selectedKinder.clear();
-
-      // Liste zur Anzeige aufbereiten -> nicht ausgewertete Kinder oben
-      kinderZurAnzeige =
-          kindRepository.zurAnzeigeSortieren(riegenKinder, ausgewerteteKinder);
-    });
-
-    // Speichern der ausgewerteten Kinder in der Datenbank
-    final zuSpeicherndeKinder = resultate.keys.toList();
-    for (var kind in zuSpeicherndeKinder) {
-      await kindRepository.saveKindToDatabase(kind);
     }
   }
 
@@ -127,18 +128,14 @@ class SprintState extends State<Sprint> {
               onPressed: (selectedKinder.isNotEmpty)
                   // Wenn selektierte Kinder vorhanden sind, dann den Timer starten
                   ? () {
-                      final laufStatus = testLauf;
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => MyStopUhr(
                             teilNehmer: selectedKinder,
-                            alsTimer: true,
-                            timerZeit: 10,
-                            testLauf: laufStatus,
-                            auswertenDerZeiten: !laufStatus
-                                ? auswerten
-                                : null, // Ergebnisse verarbeiten)
+                            rufendeStation: stationsName,
+                            auswertenDerZeiten:
+                                auswerten, // Ergebnisse verarbeiten)
                           ),
                         ),
                       ).then((_) {

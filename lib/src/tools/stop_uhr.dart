@@ -19,17 +19,13 @@ class MyStopUhr extends StatefulWidget {
   const MyStopUhr({
     super.key,
     required this.teilNehmer,
-    required this.alsTimer,
-    required this.timerZeit,
-    required this.testLauf,
+    required this.rufendeStation, // true => Timer-Modus, false => Stoppuhr-Modus
     required this.auswertenDerZeiten, // Callback-Funktion zur Rückgabe der Zeiten
   });
 
   final List<Kind> teilNehmer;
-  final bool alsTimer;
-  final int timerZeit;
-  final bool testLauf;
-  final Function(Map<Kind, int>)?
+  final String rufendeStation; // Name der Station, die die Uhr aufruft
+  final Function(Map<Kind, int>)
       auswertenDerZeiten; // Callback für das rufende Widget
 
   @override
@@ -46,11 +42,14 @@ class _MyStopUhrState extends State<MyStopUhr> {
       Duration.zero; // Verbleibende Zeit im Timer-Modus
   Duration aenderungsIntervall = const Duration(
       milliseconds: 100); // Update-Intervall für den Timer (100 ms)
-  get alsTimer => widget
-      .alsTimer; // Steuerung: true => Timer-Modus, false => Stoppuhr-Modus
+
   get teilNehmer => widget.teilNehmer; // Liste der teilnehmenden Personen
-  get testLauf => widget
-      .testLauf; // Steuerung: true => Testlauf, false => regulärer Lauf
+  get rufendeStation =>
+      widget.rufendeStation; // Name der Station, die die Uhr aufruft
+
+  late bool alsTimer;
+  late int timerZeit;
+  late bool rundenZaehler = false; // Flag für den Runden-Zähler beim 30 sec-Lauf)
 
   bool alleGestoppt = false; // Überwacht, ob alle Teilnehmer gestoppt wurden
   bool isBlinking = false; // Für Blinke-Effekt
@@ -61,18 +60,48 @@ class _MyStopUhrState extends State<MyStopUhr> {
 
   final log = getLogger();
 
+  var erlaufeneRunden =
+      1; // Zähler für die Rundenanzahl beim 30 sec-Lauf, alle beginnen mit 1 Runde
+
   @override
   void initState() {
-    // TODO: Countdown mit Zehntelsekunden; Was wird zurückgegeben, wenn der Countdown abgelaufen ist? --> Auswertung der Punktzahl; Probedurchgang???
+    // TODO: Unterscheiden zwischen Sprint, 30 sec-Lauf und Stadionrunde, dazu 'stationsNamen' in diese Klasse übergeben und auswerten
     super.initState();
 
     // Initialisiert die Stoppuhr
     stopwatch = Stopwatch();
 
-    // Timer-Werte aus den Widget-Parametern initialisieren
-    timerDuration =
-        Duration(seconds: widget.timerZeit); // Gesamtdauer des Timers
-    remainingTime = timerDuration; // Verbleibende Zeit im Timer-Modus
+    // legt aufgrund der rufenden Station den Modus fest
+    switch (rufendeStation) {
+      case 'Sprint':
+        alsTimer = true; // Timer-Modus
+        timerZeit = 10; // Zeit in Sekunden
+        break;
+      case '30sec-Lauf':
+        alsTimer = true; // Timer-Modus
+        timerZeit = 30; // Zeit in Sekunden
+        rundenZaehler = true;
+        break;
+      case 'Bananenkartons':
+      case 'Stadionrunde':
+        alsTimer = false; // StopUhr-Modus
+        break;
+    }
+
+    if (alsTimer) {
+      // Timer-Werte initialisieren
+      timerDuration = Duration(seconds: timerZeit); // Gesamtdauer des Timers
+      remainingTime = timerDuration; // Verbleibende Zeit im Timer-Modus
+
+      // Blinke-Timer starten (nur wenn als Timer verwendet)
+      Timer.periodic(const Duration(milliseconds: 500), (timer) {
+        if (remainingTime.inSeconds <= 2) {
+          setState(() {
+            opacity = opacity == 1.0 ? 0.5 : 1.0; // Blinken
+          });
+        }
+      });
+    }
 
     // Startet einen periodischen Timer, der alle 100 Millisekunden ausgeführt wird
     t = Timer.periodic(aenderungsIntervall, (timer) {
@@ -84,17 +113,6 @@ class _MyStopUhrState extends State<MyStopUhr> {
         }
       });
     });
-
-    // Blinke-Timer starten (nur wenn als Timer verwendet)
-    if (widget.alsTimer) {
-      Timer.periodic(const Duration(milliseconds: 500), (timer) {
-        if (remainingTime.inSeconds <= 2) {
-          setState(() {
-            opacity = opacity == 1.0 ? 0.5 : 1.0; // Blinken
-          });
-        }
-      });
-    }
   }
 
   // Methode zur Freigabe von Ressourcen beim Schließen des Widgets
@@ -143,9 +161,14 @@ class _MyStopUhrState extends State<MyStopUhr> {
     });
   }
 
+  // Farbänderungen für die Uhr festlegen
+  // für Timer: abhängig von der verbleibenden Zeit
+  // TODO: für Stoppuhr: abhängig von der erreichten Punktzahl;
+  //    Bananenkartons:
+  //    Stadionrunde:
   Color getUhrFarbe() {
-    if (!widget.alsTimer) return Colors.white; 
-    if (remainingTime.inSeconds > 2) return Colors.green; 
+    if (!alsTimer) return Colors.white;
+    if (remainingTime.inSeconds > 2) return Colors.green;
     if (remainingTime.inSeconds > 0) return Colors.orange;
     return Colors.red;
   }
@@ -163,9 +186,17 @@ class _MyStopUhrState extends State<MyStopUhr> {
   void _stopForKind(Kind kind) {
     if (_kindMitZeit.containsKey(kind)) return; // Stop only once per child
 
+    // TODO: hier werden die Kinder mit der entsprechenden Zeit(in millisekunden)/Rundenzahl (30 sec-Lauf) in die Map geschrieben
     setState(() {
+      // in die Map werden die Zeiten in Milisekunden geschrieben:
+      // falls die Stoppuhr als Timer läuft, wird geprüft ob der Timer als Rundenzähler (30sec-Lauf) fungiert
+      // wenn ja, werden die erlaufenen Runden, sonst die verbliebene Zeit in Millisekunden gespeichert
+      // läuft die StopUhr als Stoppuhr, wird die verstrichene Zeit in Millisekunden gespeichert
       _kindMitZeit[kind] = alsTimer
-          ? remainingTime.inMilliseconds
+          ? rundenZaehler
+              ? erlaufeneRunden
+              : remainingTime
+                  .inMilliseconds // TODO: hier noch unterscheiden zwischen 30 sec-Lauf und Sprint
           : stopwatch.elapsed.inMilliseconds;
       log.i(
           'Es wurde nicht gestoppt: remainingTime: ${(remainingTime.inMilliseconds).toStringAsFixed(1)}');
@@ -201,7 +232,8 @@ class _MyStopUhrState extends State<MyStopUhr> {
                     height: 250,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      shape: BoxShape.circle, // this one is use for make the circle on ui.
+                      shape: BoxShape
+                          .circle, // this one is use for make the circle on ui.
                       color: getUhrFarbe(),
                       border: Border.all(
                         color: const Color(0xff0395eb),
@@ -223,8 +255,10 @@ class _MyStopUhrState extends State<MyStopUhr> {
                 // Platzhalter
                 height: 30,
                 child: alsTimer
-                    ? Text(
-                        'Klicken Sie eine Teilnehmer:in, wenn sie vor Ablauf der Zeit im Ziel ist.')
+                    ? rundenZaehler
+                        ? Text('Klicken Sie Plus zu Beginn jeder halben Runde')
+                        : Text(
+                            'Klicken Sie eine Teilnehmer:in, wenn sie vor Ablauf der Zeit im Ziel ist.')
                     : Text(
                         'Klicken Sie eine Teilnehmer:in um dessen Zeit zu stoppen.'),
               ),
@@ -239,15 +273,11 @@ class _MyStopUhrState extends State<MyStopUhr> {
               ),
               if (alleGestoppt) // Beenden-Button anzeigen
                 ZurueckButton(
-                  label: 
-                  !testLauf ?'Nächster Durchgang' : 'Testlauf beendet. \n Neue Auswahl der Hütchen ist möglich',
-                  auswertenDerErgebnisse: 
-                  !testLauf?
-                  () {
+                  label: 'Nächster Durchgang',
+                  auswertenDerErgebnisse: () {
                     log.i('rufe Callback auf');
-                    widget.auswertenDerZeiten!(_kindMitZeit);
-                  }
-                  : null, // Callback nur aufrufen, wenn nicht im Testlauf
+                    widget.auswertenDerZeiten(_kindMitZeit);
+                  },
                 ), // Callback ausführen
             ],
           ),
