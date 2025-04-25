@@ -61,7 +61,7 @@ class WettbewerbState extends State<Wettbewerb> {
           ),
       'Stabfliegen': () => const Stabfliegen(),
       'Hoch-Weitsprung': () => const Weitsprung(),
-      'Stadionrunde': () => const Stadionrunde(),
+      'Stadionrunde': () => Stadionrunde(riegenNummer: riegenNummer),
     };
     // den Zustand der App vor der Pause wiederherstellen
     _loadState();

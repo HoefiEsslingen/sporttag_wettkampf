@@ -166,13 +166,23 @@ class _MyStopUhrState extends State<MyStopUhr> {
     return Colors.red;
   }
 
+  // Funktion zum Formatieren der Zeit
   String returnFormattedText() {
     final duration =
         (modus == 0 || modus == 2) ? remainingTime : stopwatch.elapsed;
-    var milli = duration.inMilliseconds;
-    String tenths = ((milli ~/ 100) % 10).toString();
-    String seconds = ((milli ~/ 1000) % 60).toString().padLeft(2, "0");
-    return "$seconds.$tenths";
+    final milli = duration.inMilliseconds;
+
+    if (modus == 1 && duration.inSeconds >= 60) {
+      // Minutenanzeige ab 60 Sekunden im Stoppuhrmodus
+      final minutes = (milli ~/ 60000).toString().padLeft(2, "0");
+      final seconds = ((milli ~/ 1000) % 60).toString().padLeft(2, "0");
+      return "$minutes:$seconds";
+    } else {
+      // Standardanzeige: Sekunden.Zehntelsekunde
+      final seconds = ((milli ~/ 1000) % 60).toString().padLeft(2, "0");
+      final tenths = ((milli ~/ 100) % 10).toString();
+      return "$seconds.$tenths";
+    }
   }
 
   @override
