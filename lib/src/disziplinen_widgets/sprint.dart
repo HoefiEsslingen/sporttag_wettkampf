@@ -69,6 +69,8 @@ class SprintState extends State<Sprint> {
           kinderMitZeiten[kind] = zeit; // Zeit speichern
           // die eingestellten Hütchen werden als Punkt vergeben, wenn die Zeit > 0 ist
           final punkte = _werteZeitenAus(zeit, kind);
+          // die an dieser Station erreichten Punkte werden gespeichert
+          kinderMitZeiten[kind] = punkte;
           log.i('in auswerten $zeit für ${kind.nachname}');
           kind.erreichtePunkte += punkte; // Punkte zuweisen
         }
@@ -93,12 +95,20 @@ class SprintState extends State<Sprint> {
   }
 
   int _werteZeitenAus(int zeitInMillis, Kind kind) {
+    int punkte;
+    zeitInMillis > 0
+        ? punkte = gewaehlteHuetchen[kind] ?? 0
+        : punkte = 0; // Wenn 'kind' nicht in der Map enthalten ist, dann 0 zurückgeben
+    // Punkte werden aufrund der erreichten Zeit berechnet
+    return punkte;
+/*
     if (zeitInMillis > 0) {
       return gewaehlteHuetchen[kind] ??
           0; // Wenn 'kind' nicht in der Map enthalten ist, dann 0 zurückgeben
     } else {
       return 0;
     }
+*/
   }
 
   bool alleHuetchenGewaehlt() {
@@ -134,7 +144,7 @@ class SprintState extends State<Sprint> {
                           builder: (context) => MyStopUhr(
                             teilNehmer: selectedKinder,
                             rufendeStation: stationsName,
-                            auswertenDerZeiten:
+                            auswertenDerWerte:
                                 auswerten, // Ergebnisse verarbeiten)
                           ),
                         ),
@@ -172,7 +182,7 @@ class SprintState extends State<Sprint> {
                           kind: kind,
                           istAusgewertet: istAusgewertet,
                           istSelektiert: istSelektiert,
-                          zeit: zeit,
+                          erreichtePunkte: zeit,
                           onSelectionChanged: (Kind kind, bool istSelektiert) {
                             setState(() {
                               if (istSelektiert) {

@@ -6,7 +6,7 @@ class MeinListenEintrag extends StatelessWidget {
   final Kind kind;
   final bool istAusgewertet;
   final bool istSelektiert;
-  final int? zeit;
+  final int? erreichtePunkte;
   final Function(Kind, bool) onSelectionChanged; // Callback hinzufügen
 
   const MeinListenEintrag({
@@ -14,7 +14,7 @@ class MeinListenEintrag extends StatelessWidget {
     required this.kind,
     required this.istAusgewertet,
     required this.istSelektiert,
-    this.zeit,
+    this.erreichtePunkte,
     required this.onSelectionChanged, // Callback initialisieren
   });
 
@@ -45,12 +45,10 @@ class MeinListenEintrag extends StatelessWidget {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (zeit != null)
-            Text(
-                'Gestoppte Zeit: ${(zeit! / 1000).toStringAsFixed(1)} Sekunden'),
-          if (zeit != null)
-            Text(
-              'erreichte Punkte: ${kind.erreichtePunkte}',
+          if (erreichtePunkte != null)
+            Text('An dieser Station wurden $erreichtePunkte erzielt.'),
+            Text(              
+              'bisherige Gesamtpunktzahl: ${kind.erreichtePunkte}',
               style: TextStyle(
                 fontStyle: istAusgewertet ? FontStyle.italic : FontStyle.normal,
                 color: istAusgewertet ? Colors.amber : Colors.black,
@@ -65,7 +63,6 @@ class MeinListenEintrag extends StatelessWidget {
           : () => onSelectionChanged(kind, !istSelektiert),
       selected: istSelektiert,
       selectedTileColor: Colors.blue[100],
-//      titleAlignment: ListTileTitleAlignment.center,
     );
   }
 }

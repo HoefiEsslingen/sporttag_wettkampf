@@ -59,10 +59,11 @@ class LaufState extends State<Lauf> {
       // Gestoppte Zeiten hinzufügen und Punkte berechnen
       for (var entry in resultate.entries) {
         final kind = entry.key;
-        final zeit = entry.value;
+        final runden = entry.value;
 
-        kinderMitZeiten[kind] = zeit; // Zeit speichern
-        log.i('in auswerten $zeit für ${kind.nachname}');
+        kinderMitZeiten[kind] = runden; // erreichte Punkte (halbe Runden) speichern
+        log.i('in auswerten $runden für ${kind.nachname}');
+        kind.erreichtePunkte += runden; // Punkte zuweisen
       }
 
       // Teilnehmer als ausgewertet markieren
@@ -111,7 +112,7 @@ class LaufState extends State<Lauf> {
                           builder: (context) => MyStopUhr(
                             teilNehmer: selectedKinder,
                             rufendeStation: stationsName,
-                            auswertenDerZeiten:
+                            auswertenDerWerte:
                                 auswerten, // Ergebnisse verarbeiten)
                           ),
                         ),
@@ -128,7 +129,7 @@ class LaufState extends State<Lauf> {
                 itemCount: riegenKinder.length,
                 itemBuilder: (context, index) {
                   final kind = kinderZurAnzeige[index];
-                  final zeit = kinderMitZeiten[kind]; // Gestoppte Zeit abrufen
+                  final erreichtePunkte = kinderMitZeiten[kind]; // Gestoppte Zeit abrufen
                   final istAusgewertet = ausgewerteteKinder.contains(kind);
                   log.i(
                       'in ListViewBuilder ${kind.nachname} ist selektiert? -> ${selectedKinder.contains(kind).toString()}');
@@ -143,7 +144,7 @@ class LaufState extends State<Lauf> {
                           kind: kind,
                           istAusgewertet: istAusgewertet,
                           istSelektiert: istSelektiert,
-                          zeit: zeit,
+                          erreichtePunkte: erreichtePunkte,
                           onSelectionChanged: (Kind kind, bool istSelektiert) {
                             setState(() {
                               if (istSelektiert) {

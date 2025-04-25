@@ -11,277 +11,240 @@ import 'logger.util.dart';
 import 'teilnehmer_liste.dart';
 
 class MyStopUhr extends StatefulWidget {
-  /// *************************************
-  /// Der Stopuhr werden Personen übergeben, für die die verbleibdene (alsTimer == true)
-  /// oder benötigte (alsTimer == false, also StopUhr) Zeit ermittelt wird.
-  ///
-  /// Die Zeit sollte an das rufende Widget zurück gegeben werden, damit diese dort ausgewertet wird.
   const MyStopUhr({
     super.key,
     required this.teilNehmer,
-    required this.rufendeStation, // true => Timer-Modus, false => Stoppuhr-Modus
-    required this.auswertenDerZeiten, // Callback-Funktion zur Rückgabe der Zeiten
+    required this.rufendeStation, // 0: Timer, 1: Stoppuhr, 2: Rundenmodus
+    required this.auswertenDerWerte,
   });
 
   final List<Kind> teilNehmer;
   final String rufendeStation; // Name der Station, die die Uhr aufruft
-  final Function(Map<Kind, int>)
-      auswertenDerZeiten; // Callback für das rufende Widget
+  final Function(Map<Kind, int>) auswertenDerWerte;
 
   @override
   State<MyStopUhr> createState() => _MyStopUhrState();
 }
 
 class _MyStopUhrState extends State<MyStopUhr> {
-  String appBarTitle = ''; // Titel für die AppBar (falls dynamisch angepasst)
-  late Stopwatch
-      stopwatch; // Stoppuhr-Objekt zur Messung der verstrichenen Zeit
-  late Timer t; // Periodischer Timer zur Aktualisierung der UI
-  late Duration timerDuration = Duration.zero; // Gesamtdauer des Timers
-  late Duration remainingTime =
-      Duration.zero; // Verbleibende Zeit im Timer-Modus
-  Duration aenderungsIntervall = const Duration(
-      milliseconds: 100); // Update-Intervall für den Timer (100 ms)
-
-  get teilNehmer => widget.teilNehmer; // Liste der teilnehmenden Personen
-  get rufendeStation =>
-      widget.rufendeStation; // Name der Station, die die Uhr aufruft
-
-  late bool alsTimer;
-  late int timerZeit;
-  late bool rundenZaehler = false; // Flag für den Runden-Zähler beim 30 sec-Lauf)
-
-  bool alleGestoppt = false; // Überwacht, ob alle Teilnehmer gestoppt wurden
-  bool isBlinking = false; // Für Blinke-Effekt
-  double opacity = 1.0; // Steuerung der Sichtbarkeit beim Blinken
-
-  // Map zur Speicherung der gestoppten Zeiten für jeden Teilnehmer
-  final Map<Kind, int> _kindMitZeit = {};
-
   final log = getLogger();
 
-  var erlaufeneRunden =
-      1; // Zähler für die Rundenanzahl beim 30 sec-Lauf, alle beginnen mit 1 Runde
+  // Initialisiere die Übergabeparameter
+  get teilNehmer => widget.teilNehmer;
+  get rufendeStation =>
+      widget.rufendeStation; // Name der Station, die die Uhr aufruft
+  get auswertenDerWerte => widget.auswertenDerWerte;
+
+  late Stopwatch stopwatch;
+  late Timer t;
+  late int timerZeit;
+  Duration aenderungsIntervall = const Duration(milliseconds: 100);
+  Duration timerDuration = const Duration(seconds: 30);
+  Duration remainingTime = Duration.zero;
+
+  final Map<Kind, int> _werte = {};
+  bool alleGestoppt = false;
+  bool isBlinking = false;
+  double opacity = 1.0;
+  int modus = -1;
 
   @override
   void initState() {
-    // TODO: Unterscheiden zwischen Sprint, 30 sec-Lauf und Stadionrunde, dazu 'stationsNamen' in diese Klasse übergeben und auswerten
     super.initState();
-
-    // Initialisiert die Stoppuhr
     stopwatch = Stopwatch();
 
     // legt aufgrund der rufenden Station den Modus fest
     switch (rufendeStation) {
       case 'Sprint':
-        alsTimer = true; // Timer-Modus
+        modus = 0; // Timer-Modus
         timerZeit = 10; // Zeit in Sekunden
         break;
       case '30sec-Lauf':
-        alsTimer = true; // Timer-Modus
+        modus = 2; // Rundenzähler im Timer-Modus
         timerZeit = 30; // Zeit in Sekunden
-        rundenZaehler = true;
         break;
       case 'Bananenkartons':
       case 'Stadionrunde':
-        alsTimer = false; // StopUhr-Modus
+        modus = 1; // StopUhr-Modus
         break;
     }
 
-    if (alsTimer) {
-      // Timer-Werte initialisieren
-      timerDuration = Duration(seconds: timerZeit); // Gesamtdauer des Timers
-      remainingTime = timerDuration; // Verbleibende Zeit im Timer-Modus
+    if (modus == 0 || modus == 2) {
+      timerDuration = Duration(seconds: timerZeit);
+      remainingTime = timerDuration;
 
-      // Blinke-Timer starten (nur wenn als Timer verwendet)
+      // Start Blinken bei 2 Sek
       Timer.periodic(const Duration(milliseconds: 500), (timer) {
         if (remainingTime.inSeconds <= 2) {
           setState(() {
-            opacity = opacity == 1.0 ? 0.5 : 1.0; // Blinken
+            opacity = opacity == 1.0 ? 0.5 : 1.0;
           });
         }
       });
     }
 
-    // Startet einen periodischen Timer, der alle 100 Millisekunden ausgeführt wird
+    // UI-Aktualisierung
     t = Timer.periodic(aenderungsIntervall, (timer) {
       setState(() {
-        if (alsTimer) {
-          _updateTimer(); // Reduziert die verbleibende Zeit im Timer-Modus
+        if (modus == 0 || modus == 2) {
+          _updateTimer();
         } else {
-          _updateStopwatch(); // Aktualisiert die verstrichene Zeit im Stoppuhr-Modus
+          _updateStopwatch();
         }
       });
     });
   }
 
-  // Methode zur Freigabe von Ressourcen beim Schließen des Widgets
-  @override
-  void dispose() {
-    t.cancel(); // Timer beenden, wenn das Widget zerstört wird
-    super.dispose();
-  }
-
-  // Timer-Logik: Countdown
   void _updateTimer() {
     if (remainingTime > Duration.zero && stopwatch.isRunning) {
-      remainingTime -= aenderungsIntervall; // Reduzieren der verbleibenden Zeit
-      if (remainingTime <= Duration.zero - aenderungsIntervall) {
-        stopwatch.stop(); // Timer stoppen, wenn die Zeit abgelaufen ist
-        remainingTime = Duration.zero -
-            aenderungsIntervall; // Sicherstellen, dass keine negative Zeit angezeigt wird
+      remainingTime -= aenderungsIntervall;
+      // Überprüfe, ob die Zeit abgelaufen ist
+      if (remainingTime <= Duration.zero) {
+        stopwatch.stop();
+        remainingTime = Duration.zero;
+        if (_werte.length <= teilNehmer.length) {
+          // Timer ist abgelaufen, aber nicht alle Teilnehmer wurden gestoppt
+          // Das kann beim Sprint passieren, wenn ein Teilnehmer nicht innnerhalb der 10 sec im Ziel ist
+          for (var kind in teilNehmer) {
+            if (!_werte.containsKey(kind)) {
+              _werte[kind] = -1; // Teilnehmer mit -1 Zeit hinzufügen
+            }
+          }
+        }
+        alleGestoppt = true;
+        t.cancel();
       }
     }
   }
 
-  // Stoppuhr-Logik: Verstrichene Zeit
   void _updateStopwatch() {
-    if (stopwatch.isRunning) {
-      // Kein spezifisches Update erforderlich, da `stopwatch.elapsed` verwendet wird
-    }
+    // kein direkter Effekt – Werte werden bei Buttondruck geholt
   }
 
+// Funktion zum Starten und Stoppen der Stoppuhr auskommentiert
   void handleStartStop() {
-    if (stopwatch.isRunning) {
-      stopwatch.stop();
-    } else {
+    if (!stopwatch.isRunning) {
       stopwatch.start();
-      if (alsTimer) {
-        remainingTime = timerDuration; // Timer zurücksetzen bei Start
-      }
+      if (modus != 1) remainingTime = timerDuration;
+    } else {
+      // Stoppuhr stoppen ist auskommentiert, da die Stoppuhr nur bei Button-Druck gestoppt werden soll
+      // stopwatch.stop();
     }
   }
 
-  void reset() {
+  // Funktion zum Stoppen der Stoppuhr für einen Teilnehmer
+  // wird aufgerufen, wenn der Teilnehmer auf den Button drückt
+  void _stopForKind(Kind kind) {
+    if (_werte.containsKey(kind)) return;
+
     setState(() {
-      stopwatch.reset();
-      if (alsTimer) {
-        remainingTime = timerDuration;
+      // in der Map _werte wird der Teilnehmer mit der Zeit gespeichert
+      // im Modus 0 (Timer für Sprint) wird die Rest-Zeit verbleibend von den 10 sec gespeichert
+      // sonst (Modus 1: Stoppuhr) wird die Zeit gespeichert, die seit dem Start der Stoppuhr vergangen ist
+      _werte[kind] = (modus == 0)
+          ? remainingTime.inMilliseconds
+          : stopwatch.elapsed.inMilliseconds;
+
+      if (_werte.length == teilNehmer.length) {
+        alleGestoppt = true;
+        t.cancel();
       }
     });
   }
 
-  // Farbänderungen für die Uhr festlegen
-  // für Timer: abhängig von der verbleibenden Zeit
-  // TODO: für Stoppuhr: abhängig von der erreichten Punktzahl;
-  //    Bananenkartons:
-  //    Stadionrunde:
+  void _setRunden(Kind kind, int runden) {
+    setState(() {
+      _werte[kind] = runden;
+      log.i('Runden für ${kind.vorname} ${kind.nachname}: $runden');
+    });
+  }
+
   Color getUhrFarbe() {
-    if (!alsTimer) return Colors.white;
+    if (modus == 1) return Colors.white;
     if (remainingTime.inSeconds > 2) return Colors.green;
     if (remainingTime.inSeconds > 0) return Colors.orange;
     return Colors.red;
   }
 
   String returnFormattedText() {
-    Duration duration = alsTimer ? remainingTime : stopwatch.elapsed;
+    final duration =
+        (modus == 0 || modus == 2) ? remainingTime : stopwatch.elapsed;
     var milli = duration.inMilliseconds;
-
-    String tenths = ((milli ~/ 100) % 10).toString(); // Zehntelsekunde
+    String tenths = ((milli ~/ 100) % 10).toString();
     String seconds = ((milli ~/ 1000) % 60).toString().padLeft(2, "0");
-
-    return "$seconds.$tenths"; // Korrekte Ausgabe: Sekunden.Zehntelsekunden
+    return "$seconds.$tenths";
   }
 
-  void _stopForKind(Kind kind) {
-    if (_kindMitZeit.containsKey(kind)) return; // Stop only once per child
-
-    // TODO: hier werden die Kinder mit der entsprechenden Zeit(in millisekunden)/Rundenzahl (30 sec-Lauf) in die Map geschrieben
-    setState(() {
-      // in die Map werden die Zeiten in Milisekunden geschrieben:
-      // falls die Stoppuhr als Timer läuft, wird geprüft ob der Timer als Rundenzähler (30sec-Lauf) fungiert
-      // wenn ja, werden die erlaufenen Runden, sonst die verbliebene Zeit in Millisekunden gespeichert
-      // läuft die StopUhr als Stoppuhr, wird die verstrichene Zeit in Millisekunden gespeichert
-      _kindMitZeit[kind] = alsTimer
-          ? rundenZaehler
-              ? erlaufeneRunden
-              : remainingTime
-                  .inMilliseconds // TODO: hier noch unterscheiden zwischen 30 sec-Lauf und Sprint
-          : stopwatch.elapsed.inMilliseconds;
-      log.i(
-          'Es wurde nicht gestoppt: remainingTime: ${(remainingTime.inMilliseconds).toStringAsFixed(1)}');
-      if (_kindMitZeit.length == teilNehmer.length) {
-        t.cancel();
-        alleGestoppt = true; // Markiere, dass alle Teilnehmer gestoppt wurden
-      }
-    });
+  @override
+  void dispose() {
+    t.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final bool isRunning = stopwatch.isRunning;
     return Scaffold(
       appBar: MeineAppBar(
         titel: 'Klick die Uhr zum Start.',
       ),
-      body: SafeArea(
-        child: Center(
-          child: Column(
-            // this is the column
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CupertinoButton(
-                // Uhr starten mit Klick
-                onPressed: () {
-                  handleStartStop();
-                },
-                padding: const EdgeInsets.all(0),
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 500),
-                  opacity: remainingTime.inSeconds <= 2 ? opacity : 1.0,
-                  child: Container(
-                    height: 250,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      shape: BoxShape
-                          .circle, // this one is use for make the circle on ui.
-                      color: getUhrFarbe(),
-                      border: Border.all(
-                        color: const Color(0xff0395eb),
-                        width: 4,
-                      ),
-                    ),
-                    child: Text(
-                      returnFormattedText(),
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontSize: 40,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+      body: Column(
+        children: [
+          CupertinoButton(
+            onPressed: !isRunning
+                ? handleStartStop
+                : null, // StoppUhr selbst soll nicht ausgeschaltet werden können
+            padding: EdgeInsets.zero,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 500),
+              opacity: remainingTime.inSeconds <= 2 ? opacity : 1.0,
+              child: Container(
+                height: 200,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: getUhrFarbe(),
+                  border: Border.all(color: Colors.blue, width: 4),
+                ),
+                child: Text(
+                  returnFormattedText(),
+                  style: const TextStyle(
+                      fontSize: 40, fontWeight: FontWeight.bold),
                 ),
               ),
-              SizedBox(
-                // Platzhalter
-                height: 30,
-                child: alsTimer
-                    ? rundenZaehler
-                        ? Text('Klicken Sie Plus zu Beginn jeder halben Runde')
-                        : Text(
-                            'Klicken Sie eine Teilnehmer:in, wenn sie vor Ablauf der Zeit im Ziel ist.')
-                    : Text(
-                        'Klicken Sie eine Teilnehmer:in um dessen Zeit zu stoppen.'),
-              ),
-              Expanded(
-                child: TeilnehmerListe(
-                  teilNehmer: teilNehmer,
-                  alsTimer: alsTimer,
-                  isRunning: stopwatch.isRunning,
-                  kindMitZeit: _kindMitZeit,
-                  onStop: _stopForKind,
-                ),
-              ),
-              if (alleGestoppt) // Beenden-Button anzeigen
-                ZurueckButton(
-                  label: 'Nächster Durchgang',
-                  auswertenDerErgebnisse: () {
-                    log.i('rufe Callback auf');
-                    widget.auswertenDerZeiten(_kindMitZeit);
-                  },
-                ), // Callback ausführen
-            ],
+            ),
           ),
-        ),
+          const SizedBox(height: 10),
+          Text(
+            (modus == 2)
+                // Rundenzähler-Modus
+                ? 'Plus/Minus für halbe Runden – solange Uhr läuft'
+                : 'Stoppe individuell pro Teilnehmer',
+          ),
+          Expanded(
+            child: TeilnehmerListe(
+              teilNehmer: teilNehmer,
+              kindMitWerten: _werte,
+              isRunning: isRunning,
+              modus: modus,
+              onValueChanged: (modus == 2)
+                  // Runden-Modus: Plus/Minus-Buttons
+                  ? _setRunden
+                  // Timer- oder Stoppuhr-Modus: Stoppe den Teilnehmer
+                  : (kind, _) => _stopForKind(kind),
+            ),
+          ),
+          // als Stoppuhr --> Ende wenn alle gestoppt sind
+          // als Timer Ende wenn alle vor Ablauf des Timers gestoppt sind oder der Timer abgelaufen ist
+          if (alleGestoppt)
+            ZurueckButton(
+              label: 'Zurück und auswerten',
+              auswertenDerErgebnisse: () {
+                log.i('Rückgabe: ${_werte.length} Einträge');
+                auswertenDerWerte(_werte);
+              },
+            ),
+        ],
       ),
     );
   }

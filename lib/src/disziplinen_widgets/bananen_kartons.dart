@@ -76,6 +76,8 @@ class BananenkartonsState extends State<Bananenkartons> {
 log.i('in auswerten $zeit für ${kind.nachname}');
         // Punkte werden aufrund der erreichten Zeit berechnet
         final punkte = _werteZeitenAus(zeit); // Punkte berechnen
+        // die an dieser Station erreichten Punkte werden gespeichert
+        kinderMitZeiten[kind] = punkte;
         kind.erreichtePunkte += punkte; // Punkte zuweisen
       }
 
@@ -144,7 +146,7 @@ log.i('in auswerten $zeit für ${kind.nachname}');
                           builder: (context) => MyStopUhr(
                             teilNehmer: selectedKinder,
                             rufendeStation: stationsName,
-                            auswertenDerZeiten:
+                            auswertenDerWerte:
                                 auswerten, // Ergebnisse verarbeiten)
                           ),
                         ),
@@ -169,7 +171,7 @@ log.i('in auswerten $zeit für ${kind.nachname}');
                     kind: kind,
                     istAusgewertet: istAusgewertet,
                     istSelektiert: istSelektiert,
-                    zeit: zeit,
+                    erreichtePunkte: zeit,
                     onSelectionChanged: (Kind kind, bool istSelektiert) {
                       setState(() {
                         if (istSelektiert) {
