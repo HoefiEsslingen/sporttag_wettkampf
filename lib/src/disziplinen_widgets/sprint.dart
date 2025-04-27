@@ -32,8 +32,7 @@ class SprintState extends State<Sprint> {
   List<Kind> kinderZurAnzeige = []; // Speichert anzuzeigende Teilnehmer
   Set<Kind> ausgewerteteKinder = {}; // Speichert ausgewertete Teilnehmer
   Map<Kind, int> kinderMitZeiten = {}; // Speichert gestoppte Zeiten
-  Map<Kind, int> gewaehlteHuetchen =
-      {}; // Speichert die gewählte Hütchen-Nummer
+  Map<Kind, int> gewaehlteHuetchen = {}; // Speichert die gewählte Hütchen-Nummer
 
   final log = getLogger();
 
@@ -101,14 +100,6 @@ class SprintState extends State<Sprint> {
         : punkte = 0; // Wenn 'kind' nicht in der Map enthalten ist, dann 0 zurückgeben
     // Punkte werden aufrund der erreichten Zeit berechnet
     return punkte;
-/*
-    if (zeitInMillis > 0) {
-      return gewaehlteHuetchen[kind] ??
-          0; // Wenn 'kind' nicht in der Map enthalten ist, dann 0 zurückgeben
-    } else {
-      return 0;
-    }
-*/
   }
 
   bool alleHuetchenGewaehlt() {
