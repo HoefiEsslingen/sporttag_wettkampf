@@ -142,7 +142,7 @@ class StadionrundeState extends State<Stadionrunde> {
           // in Stop-Uhr wechseln
           // Kinder mit Zeit speichern
           Text(
-            'Bitte selektieren Sie die an der nächsten Runde teilnehmenden Kinder.',
+            'Alle Kinder nehmen an der Stadion-Runde teil.\nSolllten Kinder nicht teilnehmen, dann diese bitte abwählen.',
             textAlign: TextAlign.center,
             style:
                 Theme.of(context).textTheme.bodySmall, // Verwenden des Themes
@@ -172,6 +172,8 @@ class StadionrundeState extends State<Stadionrunde> {
               textAlign: TextAlign.center,
             ),
           ),
+          // Liste aller Kinder in der ausgewählten Riege
+          // Die Kinder können hier durch einen Klick auf den Namen für die Teilnahme an der nächsten Runde gewählt werden
           Expanded(
             child: ListView.builder(
               itemCount: riegenKinder.length,

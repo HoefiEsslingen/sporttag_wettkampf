@@ -51,7 +51,7 @@ class WettbewerbState extends State<Wettbewerb> {
     // Map zur Zuordnung von Disziplinen zu ihren jeweiligen Widgets
     disziplinPages = {
       'Zonenweitsprung': () => const Zonenweitsprung(),
-      'Schlagwurf': () => const Schlagwurf(),
+      'Schlagwurf': () => Schlagwurf(riegenNummer: riegenNummer),
       'Drehwurf': () => const Drehwurf(),
       'Druckwurf': () => const Druckwurf(),
       'Sprint': () => Sprint(riegenNummer: riegenNummer),

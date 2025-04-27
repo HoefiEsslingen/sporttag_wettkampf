@@ -41,10 +41,7 @@ class _TeilnehmerListeState extends State<TeilnehmerListe> {
       _rundenMap[kind] = kindMitWerten[kind] ?? 1;
     }
   }
-  //TODO: Nach Ablauf des Timers sind Zähler noch aktiv
-  //TODO: Timer lässt sich stoppen, soll nciht so sein
-  //TODO: ZUrück-Button soll erscheinen, wenn timer abgelaufen ist
-
+  
   // Erhöht den Rundenzähler, nur wenn die Uhr läuft
   void _increment(Kind kind) {
     if (!isRunning) return;
@@ -117,24 +114,6 @@ class _TeilnehmerListeState extends State<TeilnehmerListe> {
                         child: Text(kind.vorname),
                       )
                     : null
-/*
-            trailing: isRunning
-                ? wert != null
-                    // Zeige Haken, wenn schon gestoppt, d.h ein Wert in onValueChanged(...) zugewiesen wurde
-                    ? const Icon(Icons.check, color: Colors.green)
-                    // Sonst Button zur Zeitnahme (nur aktiv, wenn Uhr läuft)
-                    : ElevatedButton(
-                        onPressed: () => onValueChanged(kind, 0),
-                        child: Text(kind.vorname),
-                      )
-                : null
-
-                    // Wenn Uhr abgelaufen ist und noch nicht gestoppt wurde
-                    : (!isRunning && wert == null)
-                        // Teilnehmer wurde nicht rechtzeitig gestoppt
-                        ? onValueChanged(kind, -1) // Setze -1 für "nicht erreicht"
-                        : null
-*/
             );
       },
     );

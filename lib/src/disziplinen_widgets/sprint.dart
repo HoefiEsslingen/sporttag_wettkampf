@@ -136,7 +136,7 @@ class SprintState extends State<Sprint> {
             // Liste der Kinder in der ausgewählten Riege
             ElevatedButton(
               onPressed: (selectedKinder.isNotEmpty)
-                  // Wenn selektierte Kinder vorhanden sind, dann den Timer starten
+                  // Wenn selektierte Kinder vorhanden sind, dann die StopUhr aufrufen
                   ? () {
                       Navigator.push(
                         context,
@@ -162,20 +162,22 @@ class SprintState extends State<Sprint> {
                 textAlign: TextAlign.center,
               ),
             ),
+            // Zeigt die Liste der Kinder
             Expanded(
               child: ListView.builder(
+                // Anzahl der Einträge in der Liste
                 itemCount: riegenKinder.length,
+                // Die einzelnen Einträge werden definiert
                 itemBuilder: (context, index) {
                   final kind = kinderZurAnzeige[index];
                   final zeit = kinderMitZeiten[kind]; // Gestoppte Zeit abrufen
                   final istAusgewertet = ausgewerteteKinder.contains(kind);
-                  log.i(
-                      'in ListViewBuilder ${kind.nachname} ist selektiert? -> ${selectedKinder.contains(kind).toString()}');
                   final istSelektiert = selectedKinder.contains(kind);
+                  // der Listeneintrag wird erstellt
                   return Row(
-                    mainAxisAlignment: MainAxisAlignment
-                        .spaceBetween, // Platzierung der Widgets
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween, // Platzierung der Widgets
                     children: [
+                      // erster Eintrag in der Zeile: Kind mit Zusatzangaben
                       Expanded(
                         flex: 3, // 3 Teile für den Listeneintrag
                         child: MeinListenEintrag(
@@ -196,6 +198,7 @@ class SprintState extends State<Sprint> {
                           },
                         ),
                       ),
+                      // zweiter Eintrag in der Zeile: DropDown für Auswahl der Hütchen
                       if (istSelektiert &&
                           !istAusgewertet) // Dropdown nur anzeigen, wenn Kind selektiert und nicht ausgewertet
                         Expanded(
@@ -223,9 +226,11 @@ class SprintState extends State<Sprint> {
                         ),
                     ],
                   );
-                },
+                }, // Ende itemBuilder
               ),
             ),
+            // Unterhalb der Liste wird der Beenden-Button angezeigt,
+            // wenn alle Kinder in der Liste die Station absolviert haben
             if (riegenKinder.length ==
                 ausgewerteteKinder.length) // Beenden-Button anzeigen
               ZurueckButton(label: 'Nächste Disziplin steht an'),

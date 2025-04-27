@@ -200,6 +200,7 @@ class _MyStopUhrState extends State<MyStopUhr> {
       ),
       body: Column(
         children: [
+          // Hier wird die Uhr angezeigt
           CupertinoButton(
             onPressed: !isRunning
                 ? handleStartStop
@@ -223,14 +224,17 @@ class _MyStopUhrState extends State<MyStopUhr> {
                 ),
               ),
             ),
-          ),
+          ),  
+          // Abstandshalter
           const SizedBox(height: 10),
+          // Hier wird der Modus angezeigt
           Text(
             (modus == 2)
                 // Rundenzähler-Modus
                 ? 'Plus/Minus für halbe Runden – solange Uhr läuft'
                 : 'Stoppe individuell pro Teilnehmer',
           ),
+          // Liste der an dieser Runde teilnehmenden Kinder
           Expanded(
             child: TeilnehmerListe(
               teilNehmer: teilNehmer,
@@ -244,8 +248,9 @@ class _MyStopUhrState extends State<MyStopUhr> {
                   : (kind, _) => _stopForKind(kind),
             ),
           ),
+          // Hier wird ein Button angezeigt, um diese Runde zu beenden
           // als Stoppuhr --> Ende wenn alle gestoppt sind
-          // als Timer Ende wenn alle vor Ablauf des Timers gestoppt sind oder der Timer abgelaufen ist
+          // als Timer --> Ende wenn alle vor Ablauf des Timers gestoppt sind oder der Timer abgelaufen ist
           if (alleGestoppt)
             ZurueckButton(
               label: 'Zurück und auswerten',
