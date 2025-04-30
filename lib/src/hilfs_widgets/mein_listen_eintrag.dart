@@ -46,7 +46,7 @@ class MeinListenEintrag extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (erreichtePunkte != null)
-            Text('An dieser Station wurden $erreichtePunkte erzielt.'),
+            Text('An dieser Station wurden $erreichtePunkte Punkte erzielt.'),
             Text(              
               'bisherige Gesamtpunktzahl: ${kind.erreichtePunkte}',
               style: TextStyle(
