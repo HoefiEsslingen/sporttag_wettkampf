@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:sporttag/src/tools/stationen_in_durchgaengen.dart';
 import '../hilfs_widgets/mein_listen_eintrag.dart';
 import '../hilfs_widgets/meine_appbar.dart';
 import '../hilfs_widgets/rueck_sprung_button.dart';
 import '../klassen/kind_klasse.dart';
+import '../tools/stationen_in_durchgaengen.dart';
 import '../tools/kind_repository.dart';
 import '../tools/logger.util.dart';
 import '../tools/stationen_repository.dart';
@@ -43,7 +43,6 @@ class SchlagwurfState extends State<Schlagwurf> {
     riegenNummer = widget.riegenNummer;
     _loadData();
   }
-// TODO: Beim Schlagball hat jeder Teilnehmer 3 Versuche (alle sind im selben Versuch), pro Versuch wird die Zone notiert, die zwei Besten werden zusammengezählt
 
   Future<void> auswerten(Map<Kind, List<int>> resultate) async {
     // Auswertung zulassen, falls der Testlauf beendet ist
@@ -140,7 +139,6 @@ class SchlagwurfState extends State<Schlagwurf> {
             SizedBox(height: 10),
             // Zeigt die Liste der Kinder in der Riege an
             // Hier können die Kinder, welche an der nächsten Runde teilnehmen sollen ausgewählt werden
-            // TODO: die Möglichkeit zur Selektion brauche ich hier nicht --> alle Kinder sollen in die nächsten Runden übernommen werden
             Expanded(
               child: ListView.builder(
                 itemCount: riegenKinder.length,

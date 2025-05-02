@@ -50,16 +50,14 @@ class WettbewerbState extends State<Wettbewerb> {
 
     // Map zur Zuordnung von Disziplinen zu ihren jeweiligen Widgets
     disziplinPages = {
-      'Zonenweitsprung': () => const Zonenweitsprung(),
+      'Zonenweitsprung': () => Zonenweitsprung(riegenNummer: riegenNummer),
       'Schlagwurf': () => Schlagwurf(riegenNummer: riegenNummer),
-      'Drehwurf': () => const Drehwurf(),
-      'Druckwurf': () => const Druckwurf(),
+      'Drehwurf': () => Drehwurf(riegenNummer: riegenNummer),
+      'Druckwurf': () => Druckwurf(riegenNummer: riegenNummer),
       'Sprint': () => Sprint(riegenNummer: riegenNummer),
       '30m Banankartons': () => Bananenkartons(riegenNummer: riegenNummer),
-      '30 sec Lauf': () => Lauf(
-            riegenNummer: riegenNummer,
-          ),
-      'Stabfliegen': () => const Stabfliegen(),
+      '30 sec Lauf': () => Lauf(riegenNummer: riegenNummer,),
+      'Stabfliegen': () => Stabfliegen(riegenNummer: riegenNummer),
       'Hoch-Weitsprung': () => const Weitsprung(),
       'Stadionrunde': () => Stadionrunde(riegenNummer: riegenNummer),
     };

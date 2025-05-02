@@ -174,6 +174,8 @@ class StadionrundeState extends State<Stadionrunde> {
           ),
           // Liste aller Kinder in der ausgewählten Riege
           // Die Kinder können hier durch einen Klick auf den Namen für die Teilnahme an der nächsten Runde gewählt werden
+// TODO: Kinder, die nicht mehr dabei sind, sollen abgewählt werden können
+// TODO: Nachdem die Stadionrunde gestartet wurde, sollen die Teilnehmer manuell umsortiert werden können, damit beim Zieleinlauf von oben runter gestoppt werden kann
           Expanded(
             child: ListView.builder(
               itemCount: riegenKinder.length,
