@@ -58,7 +58,7 @@ class WettbewerbState extends State<Wettbewerb> {
       '30m Banankartons': () => Bananenkartons(riegenNummer: riegenNummer),
       '30 sec Lauf': () => Lauf(riegenNummer: riegenNummer,),
       'Stabfliegen': () => Stabfliegen(riegenNummer: riegenNummer),
-      'Hoch-Weitsprung': () => const Weitsprung(),
+      'Hoch-Weitsprung': () => HochWeitSprung(riegenNummer: riegenNummer),
       'Stadionrunde': () => Stadionrunde(riegenNummer: riegenNummer),
     };
     // den Zustand der App vor der Pause wiederherstellen

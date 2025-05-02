@@ -128,6 +128,11 @@ class SchlagwurfState extends State<Schlagwurf> {
                             teilnehmer: kinderZurAnzeige,
                             anzahlDurchgaenge: 3,
                             onErgebnisseAbschliessen: auswerten,
+                            iconWidget: Image.asset(
+                              'assets/icons/speerwurf.png',
+                              width: 30,
+                              height: 30,
+                            ),
                           ),
                         ));
                   },

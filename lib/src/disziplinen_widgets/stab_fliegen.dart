@@ -118,7 +118,6 @@ class StabfliegenState extends State<Stabfliegen> {
             // Abstandshalter
             SizedBox(height: 10),
             // Liste der Kinder in der ausgewählten Riege
-            // TODO: ?? Jedes Kind drei Würfe direkt hintereinander ???
             if (!istAusgewertet)
               ElevatedButton(
                   onPressed: () {
@@ -129,6 +128,11 @@ class StabfliegenState extends State<Stabfliegen> {
                             teilnehmer: kinderZurAnzeige,
                             anzahlDurchgaenge: 3,
                             onErgebnisseAbschliessen: auswerten,
+                            iconWidget: Image.asset(
+                              'assets/icons/stabfliegen.png',
+                              width: 30,
+                              height: 30,
+                            ),
                           ),
                         ));
                   },

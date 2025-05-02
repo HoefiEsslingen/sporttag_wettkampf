@@ -51,10 +51,8 @@ class DrehwurfState extends State<Drehwurf> {
       // aus dieser Liste sollen die besten zwei Werte ermittelt und addiert werden
       // --> die Liste wird absteigend sortiert
       resultate.forEach((kind, listeDerErreichtenZonen) {
-        listeDerErreichtenZonen
-            .sort((a, b) => b.compareTo(a)); // Absteigend sortieren
-        final besteZwei =
-            listeDerErreichtenZonen.take(2).toList(); // Besten zwei Werte
+        listeDerErreichtenZonen.sort((a, b) => b.compareTo(a)); // Absteigend sortieren
+        final besteZwei = listeDerErreichtenZonen.take(2).toList(); // Besten zwei Werte
         final summe = besteZwei.reduce((a, b) => a + b); // Addieren
         kinderMitErreichtenPunkten[kind] = summe; // Zeit speichern
         kind.erreichtePunkte += summe; // Punkte zuweisen
@@ -71,7 +69,11 @@ class DrehwurfState extends State<Drehwurf> {
 
       // globale Variable 'istAusgewertet' setzen
       // damit die AppBar den Button "Nächste Disziplin steht an" anzeigen kann
-      istAusgewertet = true;
+      if(ausgewerteteKinder.length == riegenKinder.length) {
+        istAusgewertet = true;
+      } else {
+        istAusgewertet = false;
+      }
     });
 
     // Speichern der ausgewerteten Kinder (hier: alle) in der Datenbank
@@ -121,19 +123,26 @@ class DrehwurfState extends State<Drehwurf> {
             // TODO: ?? Jedes Kind drei Würfe direkt hintereinander ???
             if (!istAusgewertet)
               ElevatedButton(
-                  onPressed: () {
+                  onPressed: (selectedKinder.isNotEmpty)
+                  // Wenn selektierte Kinder vorhanden sind, dann den Timer starten
+                  ? () {
                     Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => StationenInDurchgaengen(
-                            teilnehmer: kinderZurAnzeige,
+                            teilnehmer: selectedKinder, //auskommentiert:  kinderZurAnzeige,
                             anzahlDurchgaenge: 3,
                             onErgebnisseAbschliessen: auswerten,
+                            iconWidget: Image.asset(
+                              'assets/icons/diskus.png',
+                              width: 30,
+                              height: 30,
+                            ),
                           ),
-                        ));
-                  },
+                        ),);}
+                  : null,
                   child: Text(
-                    'In den ersten Durchgang starten',
+                    'Das selektiertes Kind startet seine drei Versuche',
                     textAlign: TextAlign.center,
                   )),
             // Abstandshalter
@@ -146,7 +155,7 @@ class DrehwurfState extends State<Drehwurf> {
                 itemBuilder: (context, index) {
                   final kind = kinderZurAnzeige[index];
                   final zeit = kinderMitErreichtenPunkten[
-                      kind]; // Gestoppte Zeit abrufen
+                      kind]; // erreichte Punkte abrufen
                   final istAusgewertet = ausgewerteteKinder.contains(kind);
                   final istSelektiert = selectedKinder.contains(kind);
                   return MeinListenEintrag(
@@ -156,15 +165,18 @@ class DrehwurfState extends State<Drehwurf> {
                     erreichtePunkte: zeit,
                     onSelectionChanged: (Kind kind, bool istSelektiert) {
                       setState(() {
-                        // Keine Aktion
+                        if (selectedKinder.isEmpty && istSelektiert) {
+                          selectedKinder.add(kind);
+                        } else {
+                          selectedKinder.remove(kind);
+                        }
                       });
                     },
                   );
                 },
               ),
             ),
-            if (riegenKinder.length ==
-                ausgewerteteKinder.length) // Beenden-Button anzeigen
+            if (riegenKinder.length == ausgewerteteKinder.length) // Beenden-Button anzeigen
               ZurueckButton(label: 'Nächste Disziplin steht an'),
           ],
         ),

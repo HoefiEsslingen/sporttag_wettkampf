@@ -172,9 +172,8 @@ class StadionrundeState extends State<Stadionrunde> {
               textAlign: TextAlign.center,
             ),
           ),
-          // Liste aller Kinder in der ausgewählten Riege
-          // Die Kinder können hier durch einen Klick auf den Namen für die Teilnahme an der nächsten Runde gewählt werden
-// TODO: Kinder, die nicht mehr dabei sind, sollen abgewählt werden können
+          // Alle Kinder werden als selektiert dargestellt
+          // Die Kinder können hier durch einen Klick auf den Namen von der Teilnahme an der Stadion-Runde gewählt werden
 // TODO: Nachdem die Stadionrunde gestartet wurde, sollen die Teilnehmer manuell umsortiert werden können, damit beim Zieleinlauf von oben runter gestoppt werden kann
           Expanded(
             child: ListView.builder(
@@ -196,8 +195,7 @@ class StadionrundeState extends State<Stadionrunde> {
                       if (istSelektiert) {
                         selectedKinder.add(kind); // Hinzufügen, wenn ausgewählt
                       } else {
-                        selectedKinder
-                            .remove(kind); // Entfernen, wenn abgewählt
+                        selectedKinder.remove(kind); // Entfernen, wenn abgewählt
                       }
                     });
                   },
@@ -205,9 +203,8 @@ class StadionrundeState extends State<Stadionrunde> {
               },
             ),
           ),
-          if (riegenKinder.length ==
-              ausgewerteteKinder.length) // Beenden-Button anzeigen
-            ZurueckButton(label: 'Zurück zur Disziplinenauswahl'),
+          if (riegenKinder.length == ausgewerteteKinder.length) // Beenden-Button anzeigen
+            ZurueckButton(label: 'Ende des Kinder-Sporttages'),
         ],
       )),
     );

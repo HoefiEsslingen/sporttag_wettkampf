@@ -1,27 +1,31 @@
-/** Version 3 in der der CupertinoPicker-Dialog direkt über der Teilnehmerliste angezeigt wird */
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../hilfs_widgets/rueck_sprung_button.dart';
 import '../hilfs_widgets/meine_appbar.dart';
 import '../klassen/kind_klasse.dart';
+import 'logger.util.dart';
 
 class StationenInDurchgaengen extends StatefulWidget {
   final List<Kind> teilnehmer;
   final int anzahlDurchgaenge;
   final Function(Map<Kind, List<int>>) onErgebnisseAbschliessen;
+  final Widget iconWidget;
 
   const StationenInDurchgaengen({
     super.key,
     required this.teilnehmer,
     required this.anzahlDurchgaenge,
     required this.onErgebnisseAbschliessen,
+    required this.iconWidget,
   });
 
   @override
-  State<StationenInDurchgaengen> createState() => _MehrfacheEingabeDialogWidgetState();
+  State<StationenInDurchgaengen> createState() =>
+      _MehrfacheEingabeDialogWidgetState();
 }
 
-class _MehrfacheEingabeDialogWidgetState extends State<StationenInDurchgaengen> {
+class _MehrfacheEingabeDialogWidgetState
+    extends State<StationenInDurchgaengen> {
   int aktuellerDurchgang = 1;
   final Map<Kind, List<int>> ergebnisse = {};
   final Map<Kind, int> aktuellerWert = {};
@@ -30,6 +34,8 @@ class _MehrfacheEingabeDialogWidgetState extends State<StationenInDurchgaengen> 
 
   Kind? aktivBearbeitetesKind;
   int selectedValue = 1;
+
+  final log = getLogger();
 
   @override
   void initState() {
@@ -48,7 +54,8 @@ class _MehrfacheEingabeDialogWidgetState extends State<StationenInDurchgaengen> 
 
     setState(() {
       aktuellerWert[aktivBearbeitetesKind!] = selectedValue;
-      ergebnisse[aktivBearbeitetesKind!]![aktuellerDurchgang - 1] = selectedValue;
+      ergebnisse[aktivBearbeitetesKind!]![aktuellerDurchgang - 1] =
+          selectedValue;
       bearbeitet.add(aktivBearbeitetesKind!);
       teilnehmerReihenfolge.remove(aktivBearbeitetesKind);
       teilnehmerReihenfolge.add(aktivBearbeitetesKind!);
@@ -57,9 +64,12 @@ class _MehrfacheEingabeDialogWidgetState extends State<StationenInDurchgaengen> 
       if (alleBearbeitet()) {
         if (aktuellerDurchgang < widget.anzahlDurchgaenge) {
           aktuellerDurchgang++;
+          log.i(
+              'aktueller Durchgang: $aktuellerDurchgang und alleBearbeitet() ${alleBearbeitet()} ');
           bearbeitet.clear();
         } else {
-          widget.onErgebnisseAbschliessen(ergebnisse);
+          setState(() {}); // <- Das triggert den ZurueckButton im build()
+          // widget.onErgebnisseAbschliessen(ergebnisse); // falls gewünscht später
         }
       }
     });
@@ -74,22 +84,23 @@ class _MehrfacheEingabeDialogWidgetState extends State<StationenInDurchgaengen> 
       body: Column(
         children: [
           const SizedBox(height: 10),
-
           if (aktivBearbeitetesKind != null)
             Container(
-                color: Colors.white,
-                height: 190,
+              color: Colors.white,
+              height: 190,
               child: Expanded(
                 child: Column(
                   children: [
-                    Text('${aktivBearbeitetesKind!.vorname} ${aktivBearbeitetesKind!.nachname}: erreichte Zone',
+                    Text(
+                      '${aktivBearbeitetesKind!.vorname} ${aktivBearbeitetesKind!.nachname}: erreichte Zone',
                       style: const TextStyle(fontSize: 20),
                     ),
                     SizedBox(
                       height: 100,
                       child: CupertinoPicker(
                         itemExtent: 40,
-                        scrollController: FixedExtentScrollController(initialItem: 0),
+                        scrollController:
+                            FixedExtentScrollController(initialItem: 0),
                         onSelectedItemChanged: (value) {
                           setState(() {
                             selectedValue = value; // Werte ab 1
@@ -97,7 +108,7 @@ class _MehrfacheEingabeDialogWidgetState extends State<StationenInDurchgaengen> 
                         },
                         children: List<Widget>.generate(
                           7,
-                          (index) => Center(child: Text('${index}')),
+                          (index) => Center(child: Text('$index')),
                         ),
                       ),
                     ),
@@ -109,7 +120,6 @@ class _MehrfacheEingabeDialogWidgetState extends State<StationenInDurchgaengen> 
                 ),
               ),
             ),
-
           Expanded(
             child: ListView.builder(
               itemCount: teilnehmerReihenfolge.length,
@@ -117,17 +127,21 @@ class _MehrfacheEingabeDialogWidgetState extends State<StationenInDurchgaengen> 
                 final kind = teilnehmerReihenfolge[index];
                 return ListTile(
                   title: Text('${kind.vorname} ${kind.nachname}'),
-                  subtitle: Text('Bisher erreicht: ${ergebnisse[kind]!.join(' | ')}'),
+                  subtitle:
+                      Text('Bisher erreicht: ${ergebnisse[kind]!.join(' | ')}'),
                   trailing: bearbeitet.contains(kind)
                       ? const Icon(Icons.check, color: Colors.green, size: 40)
                       : IconButton(
-                          icon: const Icon(Icons.sports_handball),
-                          tooltip: 'Nachdem die beim Wurf erzielte Zone erfasst und bestätigt wurde, wird der Teilnehmer an das Ende der Liste verschoben.',
+                          icon: widget
+                              .iconWidget, // <-- Bild-Icon nutzen  //auskommentiert:  const Icon(Icons.sports_handball),
+                          tooltip:
+                              'Nachdem die erzielten Punkte erfasst und bestätigt wurden, wird der Teilnehmer an das Ende der Liste verschoben.',
                           iconSize: 40,
                           onPressed: () {
                             setState(() {
                               aktivBearbeitetesKind = kind;
-                              selectedValue = 1 /* auskommentiert: aktuellerWert[kind] ?? 1*/ ;
+                              selectedValue =
+                                  1 /* auskommentiert: aktuellerWert[kind] ?? 1*/;
                             });
                           },
                         ),
@@ -135,11 +149,12 @@ class _MehrfacheEingabeDialogWidgetState extends State<StationenInDurchgaengen> 
               },
             ),
           ),
-
-          if (aktuellerDurchgang == widget.anzahlDurchgaenge && alleBearbeitet())
+          if (aktuellerDurchgang == widget.anzahlDurchgaenge &&
+              alleBearbeitet())
             ZurueckButton(
               label: 'Ergebnisse auswerten und zurück',
-              auswertenDerErgebnisse: () => widget.onErgebnisseAbschliessen(ergebnisse),
+              auswertenDerErgebnisse: () =>
+                  widget.onErgebnisseAbschliessen(ergebnisse),
             ),
           const SizedBox(height: 20),
         ],

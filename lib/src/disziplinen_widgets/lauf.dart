@@ -131,8 +131,6 @@ class LaufState extends State<Lauf> {
                   final kind = kinderZurAnzeige[index];
                   final erreichtePunkte = kinderMitZeiten[kind]; // Gestoppte Zeit abrufen
                   final istAusgewertet = ausgewerteteKinder.contains(kind);
-                  log.i(
-                      'in ListViewBuilder ${kind.nachname} ist selektiert? -> ${selectedKinder.contains(kind).toString()}');
                   final istSelektiert = selectedKinder.contains(kind);
                   return Row(
                     mainAxisAlignment: MainAxisAlignment
@@ -153,16 +151,15 @@ class LaufState extends State<Lauf> {
                                 selectedKinder.remove(kind);
                               }
                             });
-                          },
+                          }
+                          ),
                         ),
-                      ),
                     ],
                   );
                 },
               ),
             ),
-            if (riegenKinder.length ==
-                ausgewerteteKinder.length) // Beenden-Button anzeigen
+            if (riegenKinder.length == ausgewerteteKinder.length) // Beenden-Button anzeigen
               ZurueckButton(label: 'Nächste Disziplin steht an'),
           ],
         ),
