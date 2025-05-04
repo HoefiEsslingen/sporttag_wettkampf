@@ -24,8 +24,7 @@ class StationenInDurchgaengen extends StatefulWidget {
       _MehrfacheEingabeDialogWidgetState();
 }
 
-class _MehrfacheEingabeDialogWidgetState
-    extends State<StationenInDurchgaengen> {
+class _MehrfacheEingabeDialogWidgetState extends State<StationenInDurchgaengen> {
   int aktuellerDurchgang = 1;
   final Map<Kind, List<int>> ergebnisse = {};
   final Map<Kind, int> aktuellerWert = {};
@@ -54,8 +53,7 @@ class _MehrfacheEingabeDialogWidgetState
 
     setState(() {
       aktuellerWert[aktivBearbeitetesKind!] = selectedValue;
-      ergebnisse[aktivBearbeitetesKind!]![aktuellerDurchgang - 1] =
-          selectedValue;
+      ergebnisse[aktivBearbeitetesKind!]![aktuellerDurchgang - 1] = selectedValue;
       bearbeitet.add(aktivBearbeitetesKind!);
       teilnehmerReihenfolge.remove(aktivBearbeitetesKind);
       teilnehmerReihenfolge.add(aktivBearbeitetesKind!);

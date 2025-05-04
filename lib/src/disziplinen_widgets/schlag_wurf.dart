@@ -30,8 +30,7 @@ class SchlagwurfState extends State<Schlagwurf> {
   List<Kind> kinderZurAnzeige = []; // Speichert anzuzeigende Teilnehmer
   Set<Kind> ausgewerteteKinder = {}; // Speichert ausgewertete Teilnehmer
   var istAusgewertet = false;
-  Map<Kind, int> kinderMitErreichtenPunkten =
-      {}; // Speichert die Summe der beiden besten Würfe
+  Map<Kind, int> kinderMitErreichtenPunkten = {}; // Speichert die Summe der beiden besten Würfe
 
   final log = getLogger();
 
@@ -94,8 +93,7 @@ class SchlagwurfState extends State<Schlagwurf> {
   Future<void> _loadData() async {
     riegenKinder = await kindRepository.ladeKinderDerRiege(riegenNummer);
     // Liste zur Anzeige aufbereiten -> nicht ausgewertete Kinder oben
-    kinderZurAnzeige =
-        kindRepository.zurAnzeigeSortieren(riegenKinder, ausgewerteteKinder);
+    kinderZurAnzeige = kindRepository.zurAnzeigeSortieren(riegenKinder, ausgewerteteKinder);
     setState(() {}); // UI aktualisieren
   }
 

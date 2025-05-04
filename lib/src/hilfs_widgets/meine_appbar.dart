@@ -1,3 +1,5 @@
+// ignore_for_file: must_be_immutable
+
 import 'package:flutter/material.dart';
 
 import 'hilfe_button.dart';
@@ -6,7 +8,8 @@ class MeineAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String titel;
   final String? stationsName;
 
-  const MeineAppBar({super.key, required this.titel, this.stationsName});
+  MeineAppBar({super.key, required this.titel, this.stationsName});
+  TextStyle style = TextStyle(fontWeight: FontWeight.bold);
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +18,7 @@ class MeineAppBar extends StatelessWidget implements PreferredSizeWidget {
         fit: BoxFit.scaleDown,
         child: Text(
           titel,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: style,
         ),
       ),
       centerTitle: true,
@@ -28,7 +31,24 @@ class MeineAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
+/*********** auskommentiert
   @override
   Size get preferredSize =>
       const Size.fromHeight(kToolbarHeight); // Standardhöhe der AppBar
+***********/
+  @override
+  Size get preferredSize {
+    final TextPainter painter = TextPainter(
+      text: TextSpan(text: titel, style: style),
+      textDirection: TextDirection.ltr,
+      maxLines: 1,
+    )..layout();
+    final height = painter.height + 20; // Padding oben/unten einberechnen
+    if (height > kToolbarHeight) {
+      return Size.fromHeight(height);
+    }else {
+      return const Size.fromHeight(kToolbarHeight);
+    }
+  }
+
 }

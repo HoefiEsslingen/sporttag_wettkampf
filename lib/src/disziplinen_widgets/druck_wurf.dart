@@ -51,10 +51,8 @@ class DruckwurfState extends State<Druckwurf> {
       // aus dieser Liste sollen die besten zwei Werte ermittelt und addiert werden
       // --> die Liste wird absteigend sortiert
       resultate.forEach((kind, listeDerErreichtenZonen) {
-        listeDerErreichtenZonen
-            .sort((a, b) => b.compareTo(a)); // Absteigend sortieren
-        final besteZwei =
-            listeDerErreichtenZonen.take(2).toList(); // Besten zwei Werte
+        listeDerErreichtenZonen.sort((a, b) => b.compareTo(a)); // Absteigend sortieren
+        final besteZwei = listeDerErreichtenZonen.take(2).toList(); // Besten zwei Werte
         final summe = besteZwei.reduce((a, b) => a + b); // Addieren
         kinderMitErreichtenPunkten[kind] = summe; // Zeit speichern
         kind.erreichtePunkte += summe; // Punkte zuweisen
@@ -66,8 +64,7 @@ class DruckwurfState extends State<Druckwurf> {
       selectedKinder.clear();
 
       // Liste zur Anzeige aufbereiten -> nicht ausgewertete Kinder oben
-      kinderZurAnzeige =
-          kindRepository.zurAnzeigeSortieren(riegenKinder, ausgewerteteKinder);
+      kinderZurAnzeige = kindRepository.zurAnzeigeSortieren(riegenKinder, ausgewerteteKinder);
 
       // globale Variable 'istAusgewertet' setzen
       // damit die AppBar den Button "Nächste Disziplin steht an" anzeigen kann

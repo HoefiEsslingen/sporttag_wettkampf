@@ -5,6 +5,145 @@ import '../hilfs_widgets/rueck_sprung_button.dart';
 import '../klassen/kind_klasse.dart';
 import '../tools/kind_repository.dart';
 import '../tools/logger.util.dart';
+import '../tools/mehrere_versuche_pro_durchgang.dart';
+import '../tools/stationen_repository.dart';
+
+class HochWeitSprung extends StatefulWidget {
+  final int riegenNummer;
+
+  const HochWeitSprung({super.key, required this.riegenNummer});
+
+  @override
+  HochWeitSprungState createState() => HochWeitSprungState();
+}
+
+class HochWeitSprungState extends State<HochWeitSprung> {
+  late String stationsName; // Variable für die zugewiesene Ausgabe
+  // Repository-Objekte
+  final KindRepository kindRepository = KindRepository();
+  final StationenRepository stationenRepository = StationenRepository();
+
+  late int riegenNummer;
+  List<Kind> riegenKinder = [];
+  List<Kind> selectedKinder = [];
+  List<Kind> kinderZurAnzeige = []; // Speichert anzuzeigende Teilnehmer
+  Set<Kind> ausgewerteteKinder = {}; // Speichert ausgewertete Teilnehmer
+  var istAusgewertet = false;
+  Map<Kind, int> kinderMitErreichtenPunkten = {}; // Speichert die Summe der beiden besten Würfe
+
+  final log = getLogger();
+
+  @override
+  void initState() {
+    super.initState();
+    stationsName = 'Hoch-Weitsprung';
+    riegenNummer = widget.riegenNummer;
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    riegenKinder = await kindRepository.ladeKinderDerRiege(riegenNummer);
+    // Liste zur Anzeige aufbereiten -> nicht ausgewertete Kinder oben
+    kinderZurAnzeige =
+        kindRepository.zurAnzeigeSortieren(riegenKinder, ausgewerteteKinder);
+    setState(() {});
+  }
+
+  Future<void> _auswertungAbschliessen(Map<Kind, int> ergebnisse) async {
+    for (var kind in riegenKinder) {
+      final punkte = ergebnisse[kind];
+      kinderMitErreichtenPunkten[kind] = punkte! * 2;
+      kind.erreichtePunkte += punkte * 2;
+      await kindRepository.saveKindToDatabase(kind);
+    }
+    setState(() {
+      istAusgewertet = true;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: MeineAppBar(
+        titel: stationsName,
+        stationsName: stationsName,
+      ),
+      body: riegenKinder.isEmpty
+          ? Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                Text(
+                  'Jedes Kind hat pro Durchgang zwei Versuche.\nBestandene Versuche erhöhen den Punktestand um 1.\nEs gibt so viele Durchgänge, bis alle Kinder ausgeschieden sind.\nAm Ende werden die Punkte verdoppelt.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                SizedBox(height: 10),
+                // Liste der Kinder in der ausgewählten Riege
+                if (!istAusgewertet)
+                  ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => VersucheInDurchgaengen(
+                                teilnehmer: riegenKinder,
+                                anzahlVersuche: 2,
+                                onErgebnisseAbschliessen:
+                                    _auswertungAbschliessen,
+                                iconWidget: Image.asset(
+                                  'assets/icons/hochsprung.png',
+                                  width: 30,
+                                  height: 30,
+                                ),
+                              ),
+                            ));
+                      },
+                      child: Text(
+                        'In den ersten Durchgang starten',
+                        textAlign: TextAlign.center,
+                      )),
+                // Abstandshalter
+                SizedBox(height: 10),
+                // Zeigt die Liste der Kinder in der Riege an
+                // Hier können die Kinder, welche an der nächsten Runde teilnehmen sollen ausgewählt werden
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: riegenKinder.length,
+                    itemBuilder: (context, index) {
+                      final kind = kinderZurAnzeige[index];
+                      final zeit = kinderMitErreichtenPunkten[kind]; // Gestoppte Zeit abrufen
+                      final istAusgewertet = ausgewerteteKinder.contains(kind);
+                      final istSelektiert = selectedKinder.contains(kind);
+                      return MeinListenEintrag(
+                        kind: kind,
+                        istAusgewertet: istAusgewertet,
+                        istSelektiert: istSelektiert,
+                        erreichtePunkte: zeit,
+                        onSelectionChanged: (Kind kind, bool istSelektiert) {
+                          setState(() {
+                            // Keine Aktion
+                          });
+                        },
+                      );
+                    },
+                  ),
+                ),
+                if (istAusgewertet)
+                  ZurueckButton(label: 'Nächste Disziplin steht an'),
+              ],
+            ),
+    );
+  }
+}
+/**************************************************
+ * Version Chat-GPT
+import 'package:flutter/material.dart';
+import '../hilfs_widgets/mein_listen_eintrag.dart';
+import '../hilfs_widgets/meine_appbar.dart';
+import '../hilfs_widgets/rueck_sprung_button.dart';
+import '../klassen/kind_klasse.dart';
+import '../tools/kind_repository.dart';
+import '../tools/logger.util.dart';
 
 class HochWeitSprung extends StatefulWidget {
   final int riegenNummer;
@@ -180,55 +319,4 @@ class HochWeitSprungState extends State<HochWeitSprung> {
     );
   }
 }
-/********************************************************************
-import 'package:flutter/material.dart';
-import 'package:sporttag/src/hilfs_widgets/rueck_sprung_button.dart';
-
-import '../hilfs_widgets/meine_appbar.dart';
-
-// Klasse für den Wettkanmpf: Hoch-Weitsprung
-class Weitsprung extends StatefulWidget {
-  const Weitsprung({super.key});
-
-// final List<Kind> riegenKinder;
-//  final String disziplin;
-
-//  const Hochsprung({super.key, required this.riegenKinder ,required this.disziplin});
-
-  /// Aktivität vorbereiten
-  @override
-  WeitsprungState createState() => WeitsprungState();
-}
-
-class WeitsprungState extends State<Weitsprung> {
-  late String stationsName; // Variable für die zugewiesene Ausgabe
-
-  @override
-  void initState() {
-    super.initState();
-    // widget.toString() der Variable zuweisen
-    stationsName = widget.toString();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: MeineAppBar(
-        titel: 'Hoch-$stationsName',
-        stationsName: 'Hoch-$stationsName',
-      ),
-      body: Center(
-        child: Column(
-          children: [
-            Text(
-              'Details zu Hoch-$stationsName',
-              style: const TextStyle(fontSize: 24),
-            ),
-            ZurueckButton(label: 'Zurück zur Disziplinenauswahl'),
-          ],
-        ),
-      ),
-    );
-  }
-}
-*********************************************************************/
+************************************************* */
