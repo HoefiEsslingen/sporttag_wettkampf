@@ -9,6 +9,7 @@ import '../hilfs_widgets/meine_appbar.dart';
 
 import 'logger.util.dart';
 import 'teilnehmer_liste.dart';
+import 'teilnehmerliste_verschiebbar.dart';
 
 class MyStopUhr extends StatefulWidget {
   const MyStopUhr({
@@ -224,7 +225,7 @@ class _MyStopUhrState extends State<MyStopUhr> {
                 ),
               ),
             ),
-          ),  
+          ),
           // Abstandshalter
           const SizedBox(height: 10),
           // Hier wird der Modus angezeigt
@@ -236,17 +237,30 @@ class _MyStopUhrState extends State<MyStopUhr> {
           ),
           // Liste der an dieser Runde teilnehmenden Kinder
           Expanded(
-            child: TeilnehmerListe(
-              teilNehmer: teilNehmer,
-              kindMitWerten: _werte,
-              isRunning: isRunning,
-              modus: modus,
-              onValueChanged: (modus == 2)
-                  // Runden-Modus: Plus/Minus-Buttons
-                  ? _setRunden
-                  // Timer- oder Stoppuhr-Modus: Stoppe den Teilnehmer
-                  : (kind, _) => _stopForKind(kind),
-            ),
+            child: rufendeStation == 'Stadionrunde'
+                // Stadion-Runde: Teilnehmer können verschoben werden
+                ? TeilnehmerVerschiebbar(
+                    teilNehmer: teilNehmer,
+                    kindMitWerten: _werte,
+                    isRunning: isRunning,
+                    modus: modus,
+                    onValueChanged: (modus == 2)
+                        // Runden-Modus: Plus/Minus-Buttons
+                        ? _setRunden
+                        // Timer- oder Stoppuhr-Modus: Stoppe den Teilnehmer
+                        : (kind, _) => _stopForKind(kind),
+                  )
+                : TeilnehmerListe(
+                    teilNehmer: teilNehmer,
+                    kindMitWerten: _werte,
+                    isRunning: isRunning,
+                    modus: modus,
+                    onValueChanged: (modus == 2)
+                        // Runden-Modus: Plus/Minus-Buttons
+                        ? _setRunden
+                        // Timer- oder Stoppuhr-Modus: Stoppe den Teilnehmer
+                        : (kind, _) => _stopForKind(kind),
+                  ),
           ),
           // Hier wird ein Button angezeigt, um diese Runde zu beenden
           // als Stoppuhr --> Ende wenn alle gestoppt sind

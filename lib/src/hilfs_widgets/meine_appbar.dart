@@ -31,11 +31,6 @@ class MeineAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-/*********** auskommentiert
-  @override
-  Size get preferredSize =>
-      const Size.fromHeight(kToolbarHeight); // Standardhöhe der AppBar
-***********/
   @override
   Size get preferredSize {
     final TextPainter painter = TextPainter(

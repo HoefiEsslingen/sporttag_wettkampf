@@ -147,7 +147,15 @@ class StadionrundeState extends State<Stadionrunde> {
             style:
                 Theme.of(context).textTheme.bodySmall, // Verwenden des Themes
           ),
-          // Abstandshalter
+           // Abstandshalter
+          SizedBox(height: 10),
+          Text(
+            'Je nach Verlauf des Rundenlaufs können Sie die Kinder in ihrer Reihenfolge verschieben.',
+            textAlign: TextAlign.center,
+            style:
+                Theme.of(context).textTheme.bodySmall, // Verwenden des Themes
+          ),
+           // Abstandshalter
           SizedBox(height: 10),
           // Liste der Kinder in der ausgewählten Riege
           ElevatedButton(
@@ -174,7 +182,6 @@ class StadionrundeState extends State<Stadionrunde> {
           ),
           // Alle Kinder werden als selektiert dargestellt
           // Die Kinder können hier durch einen Klick auf den Namen von der Teilnahme an der Stadion-Runde gewählt werden
-// TODO: Nachdem die Stadionrunde gestartet wurde, sollen die Teilnehmer manuell umsortiert werden können, damit beim Zieleinlauf von oben runter gestoppt werden kann
           Expanded(
             child: ListView.builder(
               itemCount: riegenKinder.length,

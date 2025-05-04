@@ -120,7 +120,6 @@ class DrehwurfState extends State<Drehwurf> {
             // Abstandshalter
             SizedBox(height: 10),
             // Liste der Kinder in der ausgewählten Riege
-            // TODO: ?? Jedes Kind drei Würfe direkt hintereinander ???
             if (!istAusgewertet)
               ElevatedButton(
                   onPressed: (selectedKinder.isNotEmpty)
