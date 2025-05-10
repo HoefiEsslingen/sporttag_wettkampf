@@ -12,10 +12,28 @@ class Pause extends StatelessWidget {
       ),
       body: Center(
         child: 
-            const Text(
-              textAlign:TextAlign.center, 
-              'Vielen Dank,\ndass Sie die Riege durch den Wettbewerb führen.\n\nDie Mittagspause haben Sie und Ihre Riegenkinder verdient.\n\nSie können die App jetzt schließen.',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Text(
+                  textAlign:TextAlign.center, 
+                  'Vielen Dank,\ndass Sie die Riege durch den Sporttag-Spiele führen.',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 80), // Abstand zwischen Text und Button
+                const Text(
+                  textAlign:TextAlign.center, 
+                  'Die Mittagspause haben Sie und Ihre Riegenkinder verdient.',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 80), // Abstand zwischen Text und Button
+                const Text(
+                  textAlign:TextAlign.center, 
+                  'Sie können die App schließen,\nwährend Ihrer Mittagspause.',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
       ),
     );
